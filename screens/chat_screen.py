@@ -57,6 +57,7 @@ class ChatScreen(QWidget):
         print("Closing the connection")
         self.running = False
         #     singletonSocket.get_instance().soquete.send('\q'.encode())
+        singletonSocket.reset_singleton()
         soquete.close()
 
     def handle_new_message(self, message):
@@ -230,11 +231,17 @@ class ChatScreen(QWidget):
         text = self.input_field.toHtml().strip()
         text_aux = self.input_field.toPlainText().strip()
         if text_aux:
+
             timestamp = QDateTime.currentDateTime().toString("hh:mm:ss")
             message_widget = ChatMessage("Usuário", text, timestamp)
             singletonSocket.soquete.send("Usuário: ".encode() + text_aux.encode()) #teste de envio
-            self.add_message(message_widget)
-            self.input_field.clear()
+            if text_aux == '\q':
+                self.close_connection(singletonSocket.soquete)
+                self.input_field.clear()
+                self.stacked_widget.setCurrentIndex(0) #funciona como um return
+            else:
+                self.add_message(message_widget)
+                self.input_field.clear()
 
             # Resets text field formatting after submission.
             cursor = self.input_field.textCursor()

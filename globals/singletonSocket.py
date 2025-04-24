@@ -15,3 +15,8 @@ class Socket:
         else:
             Socket.soquete = soquete
             Socket.__instance = self
+        
+    def reset_singleton():
+        Socket.soquete = None
+        Socket.__instance = None
+
