@@ -2,6 +2,9 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
+import datetime
+import json
+import random
 import threading
 from PyQt5.QtWidgets import (
     QWidget, 
@@ -40,7 +43,7 @@ from globals.singletonSocket import Socket as singletonSocket
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class ChatScreen(QWidget):
-    new_message_signal = pyqtSignal(str)
+    new_message_signal = pyqtSignal(object)
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
@@ -55,39 +58,59 @@ class ChatScreen(QWidget):
 
     def close_connection(self, soquete):
         print("Closing the connection")
+        singletonSocket.reset_singleton()
         self.running = False
-        #     singletonSocket.get_instance().soquete.send('\q'.encode())
         soquete.close()
 
     def handle_new_message(self, message):
         # timestamp = QDateTime.currentDateTime().toString("hh:mm:ss")
-        widget = ChatMessage("Outro Usuário", message, '03:05:13')
+        widget = ChatMessage("Outro Usuário", message['message'], message['timestamp'], False)
         self.add_message(widget)
 
     #|///////////////////////////////////////////////////////////////////////|#
+
+    def update_message_status(self, message_id):
+        for i in range(self.chat_area.count()):  # último item é o 'stretch'
+            widget = self.chat_area.itemAt(i).widget()
+            if widget and widget.property("message_id") == message_id and widget.client_message:
+                # Aqui você faz o que quiser: mudar cor, ícone, texto etc.
+                widget.status_label.setText("Entregue")
+                break
+
+
+    #|///////////////////////////////////////////////////////////////////////|#
+
     def receive_messages(self, soquete):
         # global end
         self.running = True
         try:
             while self.running: #doesn't need lock because python is thread safe when accessing boolean or integer variables
                 data = soquete.recv(1024)
+                message_obj = json.loads(data.decode())
+                new = True
                 if not data:
                     print('A conexão com o servidor foi perdida')
                     self.close_connection(soquete)
                     break
-                elif data.decode().split(':')[-1].strip() == '\q':
+                elif message_obj['message_type'] == 1: #quit message from other user
                     print('Seu companheiro de chat desistiu da conversa :(')
                     self.close_connection(soquete)
                     self.stacked_widget.setCurrentIndex(0)
                     break
-                elif data.decode() == '\g':
+                elif message_obj['message_type'] == 3: #quit message recognizement
                     print('Escapou da coversa')
                     self.close_connection(soquete)
+                    self.stacked_widget.setCurrentIndex(0)
                     break
+                elif message_obj['message_type'] == 2: #system returning sent message
+                    print('Seu companheiro de chat recebeu a mensagem enviada')
+                    self.update_message_status(message_obj['message_id'])
+                    new = False
 
-                self.new_message_signal.emit(data.decode())
-        finally:
-            print("Errinho")
+                if new:
+                    self.new_message_signal.emit(message_obj)
+        except Exception as e:
+            print(f"Errinho {e}")
 
     #|///////////////////////////////////////////////////////////////////////|#
 
@@ -230,9 +253,23 @@ class ChatScreen(QWidget):
         text = self.input_field.toHtml().strip()
         text_aux = self.input_field.toPlainText().strip()
         if text_aux:
+            message_id = random.randint(1000, 9999)
             timestamp = QDateTime.currentDateTime().toString("hh:mm:ss")
-            message_widget = ChatMessage("Usuário", text, timestamp)
-            singletonSocket.soquete.send("Usuário: ".encode() + text_aux.encode()) #teste de envio
+            message_widget = ChatMessage("Usuário", text, timestamp, True)
+            message_widget.setProperty("message_id", message_id)
+
+            message_type = 0 #common message
+            if text_aux == '\q':
+                message_type = 1 #quit message
+            message_json = {
+                "message_id": message_id,  # ou use um contador/sequência
+                "user": "Usuário",
+                "timestamp": timestamp,  
+                "sent_status": 0,                          # 1 = enviada com sucesso
+                "message_type": message_type, 
+                "message": text_aux
+            }
+            singletonSocket.soquete.send(json.dumps(message_json).encode('utf-8')) #teste de envio
             self.add_message(message_widget)
             self.input_field.clear()
 

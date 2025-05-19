@@ -1,3 +1,4 @@
+import json
 import socket
 import threading
 import sys
@@ -10,17 +11,29 @@ def handle_client(client_socket, other_client_socket):
         data = client_socket.recv(1024)  # Receive data from this client
         if data:
             ip, _ = client_socket.getpeername()
-            print(f"{ip}: {data.decode()}")
+            message_obj = json.loads(data.decode())
+            print(f"{ip}: {message_obj['message']}")
                 
-            # Forward the data to the other client
-            other_client_socket.send(data)
-
-            # If the client wants to quit
-            if data.decode().split(':')[-1].strip() == '\q':
-                client_socket.send('\g'.encode())
+            if message_obj['message_type'] == 1: #quit message
+                other_client_socket.send(data)                
+                message_obj['message_type'] = 3 #recognize
+                client_socket.send(json.dumps(message_obj).encode('utf-8'))
                 client_socket.close()
                 other_client_socket.close()
                 break
+            # Forward the data to the other client
+            other_client_socket.send(data)
+
+            message_obj['sent_status'] = 1 #sent
+            message_obj['message_type'] = 2 #message status update
+            client_socket.send(json.dumps(message_obj).encode('utf-8')) #message sent
+
+            # If the client wants to quit
+            # if data.decode().split(':')[-1].strip() == '\q':
+            #     client_socket.send('\g'.encode())
+            #     client_socket.close()
+            #     other_client_socket.close()
+            #     break
         else:
             print("Client disconnected.")
             break
