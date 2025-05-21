@@ -2,7 +2,6 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
-import datetime
 import json
 import random
 import threading
@@ -37,6 +36,8 @@ from models.chat_message import ChatMessage
 
 from globals.singletonSocket import Socket as singletonSocket
 
+from globals.messageType import MessageType 
+
 
 #|///////////////////////////////////////////////////////////////////////////|#
 #| CLASS                                                                     |#
@@ -69,12 +70,12 @@ class ChatScreen(QWidget):
 
     #|///////////////////////////////////////////////////////////////////////|#
 
-    def update_message_status(self, message_id):
+    def update_message_status(self, message_id, message_text):
         for i in range(self.chat_area.count()):  # último item é o 'stretch'
             widget = self.chat_area.itemAt(i).widget()
             if widget and widget.property("message_id") == message_id and widget.client_message:
                 # Aqui você faz o que quiser: mudar cor, ícone, texto etc.
-                widget.status_label.setText("Entregue")
+                widget.status_label.setText(str(message_text))
                 break
 
 
@@ -92,22 +93,28 @@ class ChatScreen(QWidget):
                     print('A conexão com o servidor foi perdida')
                     self.close_connection(soquete)
                     break
-                elif message_obj['message_type'] == 1: #quit message from other user
+                elif message_obj['message_type'] == MessageType.QUIT.value: #quit message from other user
                     print('Seu companheiro de chat desistiu da conversa :(')
                     self.close_connection(soquete)
                     self.stacked_widget.setCurrentIndex(0)
                     break
-                elif message_obj['message_type'] == 3: #quit message recognizement
+                elif message_obj['message_type'] == MessageType.QUIT_CONFIRM.value: #quit message recognizement
                     print('Escapou da coversa')
                     self.close_connection(soquete)
                     self.stacked_widget.setCurrentIndex(0)
                     break
-                elif message_obj['message_type'] == 2: #system returning sent message
+                elif message_obj['message_type'] == MessageType.SERVER_RESPONSE.value: #system returning sent message
+                    print('O servidor recebeu a mensagem enviada')
+                    self.update_message_status(message_obj['message_id'], "Enviado")
+                    new = False
+                elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #system returning sent message
                     print('Seu companheiro de chat recebeu a mensagem enviada')
-                    self.update_message_status(message_obj['message_id'])
+                    self.update_message_status(message_obj['message_id'], 'Recebido')
                     new = False
 
                 if new:
+                    message_obj['message_type'] = MessageType.RECEIVE_RESPONSE.value
+                    soquete.send(json.dumps(message_obj).encode('utf-8'))
                     self.new_message_signal.emit(message_obj)
         except Exception as e:
             print(f"Errinho {e}")

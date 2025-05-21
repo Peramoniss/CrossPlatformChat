@@ -1,0 +1,9 @@
+from enum import Enum
+
+
+class MessageType(Enum):
+    COMMON = 0
+    QUIT = 1
+    SERVER_RESPONSE = 2
+    QUIT_CONFIRM = 3
+    RECEIVE_RESPONSE = 4

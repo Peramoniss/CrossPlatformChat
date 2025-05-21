@@ -3,6 +3,7 @@ import socket
 import threading
 import sys
 import logging
+from globals.messageType import MessageType
 
 # Function to handle a client's communication
 def handle_client(client_socket, other_client_socket):
@@ -14,18 +15,21 @@ def handle_client(client_socket, other_client_socket):
             message_obj = json.loads(data.decode())
             print(f"{ip}: {message_obj['message']}")
                 
-            if message_obj['message_type'] == 1: #quit message
+            if message_obj['message_type'] == MessageType.QUIT.value: #quit message
                 other_client_socket.send(data)                
-                message_obj['message_type'] = 3 #recognize
+                message_obj['message_type'] = MessageType.QUIT_CONFIRM.value #recognize
                 client_socket.send(json.dumps(message_obj).encode('utf-8'))
                 client_socket.close()
                 other_client_socket.close()
                 break
+            elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #other client recognizes they received the message
+                other_client_socket.send(data)                
+                continue #interrompe a iteração e reinicia
+
             # Forward the data to the other client
             other_client_socket.send(data)
 
-            message_obj['sent_status'] = 1 #sent
-            message_obj['message_type'] = 2 #message status update
+            message_obj['message_type'] = MessageType.SERVER_RESPONSE.value #message status update
             client_socket.send(json.dumps(message_obj).encode('utf-8')) #message sent
 
             # If the client wants to quit
