@@ -80,13 +80,10 @@ class ChatScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def on_focus_changed(self):
-        print('AAAHHHAHAHA')
         if self.isActiveWindow():
-            print('EU ODEIO TUDO E TODOS INCLUINDO EU AAAA')
             for message in self.unread_messages[:]:
                 message['message_type'] = MessageType.READ_RESPONSE.value
-                # message['read_status'] = 1
-                singletonSocket.soquete.send(json.dumps(message).encode('utf-8').strip() + '\n'.encode('utf-8'))
+                singletonSocket.soquete.send((json.dumps(message) + '\n').encode('utf-8').strip())
                 self.unread_messages.remove(message)
 
         # super().changeEvent(event)
@@ -141,16 +138,16 @@ class ChatScreen(QWidget):
 
                 if new:
                     message_obj['message_type'] = MessageType.RECEIVE_RESPONSE.value
-                    soquete.send(json.dumps(message_obj).encode('utf-8') + '\n'.encode('utf-8'))
+                    soquete.send((json.dumps(message_obj) + '\n').encode('utf-8'))
                     if (self.isActiveWindow()):
                         message_obj['message_type'] = MessageType.READ_RESPONSE.value
-                        soquete.send(json.dumps(message_obj).encode('utf-8') + '\n'.encode('utf-8'))
+                        soquete.send((json.dumps(message_obj) + '\n').encode('utf-8'))
                     else:
                         self.unread_messages.append(message_obj)
-                    # print(self.unread_messages)
                     self.new_message_signal.emit(message_obj)
         except Exception as e:
             print(f"Errinho {e}")
+            print(message_obj)
 
     #|///////////////////////////////////////////////////////////////////////|#
 
@@ -300,7 +297,7 @@ class ChatScreen(QWidget):
 
             message_type = 0 #common message
             if text_aux == '\q':
-                message_type = 1 #quit message
+                message_type = MessageType.QUIT.value #quit message
 
             message_json = {
                 "message_id": message_id,  
@@ -310,7 +307,7 @@ class ChatScreen(QWidget):
                 "message_type": message_type, 
                 "message": text_aux
             }
-            singletonSocket.soquete.send(json.dumps(message_json).encode('utf-8') + '\n'.encode('utf-8')) #teste de envio
+            singletonSocket.soquete.send((json.dumps(message_json ) + '\n').encode('utf-8')) #teste de envio
             self.add_message(message_widget)
             self.input_field.clear()
 
