@@ -14,13 +14,15 @@ from PyQt5.QtWidgets import (
     QLabel, 
     QScrollArea,
     QSizePolicy,
-    QFrame
+    QFrame,
+    QApplication
 )
 
 from PyQt5.QtCore import (
     Qt, 
     QDateTime,
-    QTimer
+    QTimer,
+    QEvent
 )
 
 from PyQt5.QtGui import (
@@ -45,6 +47,7 @@ from globals.messageType import MessageType
 
 class ChatScreen(QWidget):
     new_message_signal = pyqtSignal(object)
+
     def __init__(self, stacked_widget):
         super().__init__()
         self.stacked_widget = stacked_widget
@@ -52,6 +55,12 @@ class ChatScreen(QWidget):
         self.running = False
 
         self.new_message_signal.connect(self.handle_new_message)        
+        self.unread_messages = []
+        app = QApplication.instance()
+        if app is not None:
+            app.focusChanged.connect(self.on_focus_changed)
+        print("LALALA")
+
 
     def start_connection(self):
         receive_thread = threading.Thread(target=self.receive_messages, args=[singletonSocket.get_instance().soquete], daemon=True) #daemon ensures the thread closes when the main thread ends
@@ -67,6 +76,20 @@ class ChatScreen(QWidget):
         # timestamp = QDateTime.currentDateTime().toString("hh:mm:ss")
         widget = ChatMessage("Outro Usuário", message['message'], message['timestamp'], False)
         self.add_message(widget)
+
+    #|///////////////////////////////////////////////////////////////////////|#
+
+    def on_focus_changed(self):
+        print('AAAHHHAHAHA')
+        if self.isActiveWindow():
+            print('EU ODEIO TUDO E TODOS INCLUINDO EU AAAA')
+            for message in self.unread_messages[:]:
+                message['message_type'] = MessageType.READ_RESPONSE.value
+                # message['read_status'] = 1
+                singletonSocket.soquete.send(json.dumps(message).encode('utf-8').strip() + '\n'.encode('utf-8'))
+                self.unread_messages.remove(message)
+
+        # super().changeEvent(event)
 
     #|///////////////////////////////////////////////////////////////////////|#
 
@@ -108,13 +131,23 @@ class ChatScreen(QWidget):
                     self.update_message_status(message_obj['message_id'], "Enviado")
                     new = False
                 elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #system returning sent message
-                    print('Seu companheiro de chat recebeu a mensagem enviada')
+                    print('Seu companheiro de chat recebeu sua mensagem')
                     self.update_message_status(message_obj['message_id'], 'Recebido')
+                    new = False
+                elif message_obj['message_type'] == MessageType.READ_RESPONSE.value:
+                    print('Seu companheiro de chat leu sua mensagem')
+                    self.update_message_status(message_obj['message_id'], 'Lido')
                     new = False
 
                 if new:
                     message_obj['message_type'] = MessageType.RECEIVE_RESPONSE.value
-                    soquete.send(json.dumps(message_obj).encode('utf-8'))
+                    soquete.send(json.dumps(message_obj).encode('utf-8') + '\n'.encode('utf-8'))
+                    if (self.isActiveWindow()):
+                        message_obj['message_type'] = MessageType.READ_RESPONSE.value
+                        soquete.send(json.dumps(message_obj).encode('utf-8') + '\n'.encode('utf-8'))
+                    else:
+                        self.unread_messages.append(message_obj)
+                    # print(self.unread_messages)
                     self.new_message_signal.emit(message_obj)
         except Exception as e:
             print(f"Errinho {e}")
@@ -268,15 +301,16 @@ class ChatScreen(QWidget):
             message_type = 0 #common message
             if text_aux == '\q':
                 message_type = 1 #quit message
+
             message_json = {
-                "message_id": message_id,  # ou use um contador/sequência
+                "message_id": message_id,  
                 "user": "Usuário",
                 "timestamp": timestamp,  
-                "sent_status": 0,                          # 1 = enviada com sucesso
+                "read_status": 0,                          # 1 = lida
                 "message_type": message_type, 
                 "message": text_aux
             }
-            singletonSocket.soquete.send(json.dumps(message_json).encode('utf-8')) #teste de envio
+            singletonSocket.soquete.send(json.dumps(message_json).encode('utf-8') + '\n'.encode('utf-8')) #teste de envio
             self.add_message(message_widget)
             self.input_field.clear()
 

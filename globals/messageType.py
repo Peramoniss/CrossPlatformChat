@@ -7,3 +7,4 @@ class MessageType(Enum):
     SERVER_RESPONSE = 2
     QUIT_CONFIRM = 3
     RECEIVE_RESPONSE = 4
+    READ_RESPONSE = 5

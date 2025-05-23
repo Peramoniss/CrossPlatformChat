@@ -8,40 +8,61 @@ from globals.messageType import MessageType
 # Function to handle a client's communication
 def handle_client(client_socket, other_client_socket):
     client_socket.send('Conexão estabelecida. Aguardando conversa...\n'.encode())
+    buffer = ""
+    DELIMITER = '\n'  # Usamos newline como delimitador
+    
     while True:
-        data = client_socket.recv(1024)  # Receive data from this client
-        if data:
-            ip, _ = client_socket.getpeername()
-            message_obj = json.loads(data.decode())
-            print(f"{ip}: {message_obj['message']}")
-                
-            if message_obj['message_type'] == MessageType.QUIT.value: #quit message
-                other_client_socket.send(data)                
-                message_obj['message_type'] = MessageType.QUIT_CONFIRM.value #recognize
-                client_socket.send(json.dumps(message_obj).encode('utf-8'))
-                client_socket.close()
-                other_client_socket.close()
+        try:
+            # Recebe dados e adiciona ao buffer
+            data = client_socket.recv(1024).decode('utf-8')
+            if not data:
+                print("Client disconnected.")
                 break
-            elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #other client recognizes they received the message
-                other_client_socket.send(data)                
-                continue #interrompe a iteração e reinicia
-
-            # Forward the data to the other client
-            other_client_socket.send(data)
-
-            message_obj['message_type'] = MessageType.SERVER_RESPONSE.value #message status update
-            client_socket.send(json.dumps(message_obj).encode('utf-8')) #message sent
-
-            # If the client wants to quit
-            # if data.decode().split(':')[-1].strip() == '\q':
-            #     client_socket.send('\g'.encode())
-            #     client_socket.close()
-            #     other_client_socket.close()
-            #     break
-        else:
-            print("Client disconnected.")
+                
+            buffer += data
+            ip, _ = client_socket.getpeername()
+            
+            # Processa todas as mensagens completas no buffer
+            while DELIMITER in buffer:
+                # Separa a primeira mensagem completa
+                message_str, buffer = buffer.split(DELIMITER, 1)
+                message_str = message_str.strip()  # Remove espaços em branco
+                
+                if not message_str:  # Ignora strings vazias
+                    continue
+                    
+                try:
+                    message_obj = json.loads(message_str)
+                    print(f"{ip}: {message_obj.get('message', '')}")
+                    
+                    # Tratamento dos tipos de mensagem
+                    if message_obj.get('message_type') == MessageType.QUIT.value:
+                        other_client_socket.send((json.dumps(message_obj) + DELIMITER).encode('utf-8'))
+                        message_obj['message_type'] = MessageType.QUIT_CONFIRM.value
+                        client_socket.send((json.dumps(message_obj) + DELIMITER).encode('utf-8'))
+                        break
+                        
+                    elif message_obj.get('message_type') == MessageType.RECEIVE_RESPONSE.value:
+                        print(f"Atualizando status para {message_obj.get('read_status', '')}")
+                        other_client_socket.send((json.dumps(message_obj) + DELIMITER).encode('utf-8'))
+                        continue
+                        
+                    else:
+                        # Encaminha para o outro cliente
+                        other_client_socket.send((json.dumps(message_obj) + DELIMITER).encode('utf-8'))
+                        message_obj['message_type'] = MessageType.SERVER_RESPONSE.value
+                        client_socket.send((json.dumps(message_obj) + DELIMITER).encode('utf-8'))
+                        
+                except json.JSONDecodeError as e:
+                    print(f"Erro ao decodificar JSON: {e}\nDados: {message_str[:100]}...")
+                    continue
+                    
+        except (ConnectionResetError, UnicodeDecodeError) as e:
+            print(f"Erro de conexão: {e}")
             break
+            
     client_socket.close()
+    other_client_socket.close()
 
 # Start server and wait for connections
 def start_server():
