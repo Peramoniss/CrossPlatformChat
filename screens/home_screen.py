@@ -27,6 +27,8 @@ class HomeScreen(QWidget):
 
         layout.addWidget(button)
         self.setLayout(layout)
+    
+    #|///////////////////////////////////////////////////////////////////////|#
 
     def go_to_chat(self):
         print("\nENTROU EM go_to_chat()\n")

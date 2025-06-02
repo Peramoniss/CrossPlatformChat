@@ -57,94 +57,7 @@ class ChatScreen(QWidget):
 
         if app is not None:
             app.focusChanged.connect(self.on_focus_changed)
-
-
-    def start_connection(self):
-        receive_thread = threading.Thread(target=self.receive_messages, args=[singletonSocket.get_instance().soquete], daemon=True) #daemon ensures the thread closes when the main thread ends
-        receive_thread.start()
-
-    def close_connection(self, soquete):
-        print("Closing the connection")
-        singletonSocket.reset_singleton()
-        self.running = False
-        soquete.close()
-
-    def handle_new_message(self, message):
-        widget = ChatMessage("Outro Usuário", message['message'], message['timestamp'], False)
-        self.add_message(widget)
-
-    #|///////////////////////////////////////////////////////////////////////|#
-
-    def on_focus_changed(self):
-        if self.isActiveWindow():
-            for message in self.unread_messages[:]:
-                message['message_type'] = MessageType.READ_RESPONSE.value
-                singletonSocket.soquete.send((json.dumps(message) + '\n').encode('utf-8'))
-                self.unread_messages.remove(message)
-
-        # super().changeEvent(event)
-
-    #|///////////////////////////////////////////////////////////////////////|#
-
-    def update_message_status(self, message_id, message_text):
-        for i in range(self.chat_area.count()):  # último item é o 'stretch'
-            widget = self.chat_area.itemAt(i).widget()
-            if widget and widget.property("message_id") == message_id and widget.client_message:
-                # Aqui você faz o que quiser: mudar cor, ícone, texto etc.
-                widget.status_label.setText(str(message_text))
-                break
-
-
-    #|///////////////////////////////////////////////////////////////////////|#
-
-    def receive_messages(self, soquete):
-        # global end
-        self.running = True
-        try:
-            while self.running: #doesn't need lock because python is thread safe when accessing boolean or integer variables
-                data = soquete.recv(1024)
-                message_obj = json.loads(data.decode())
-                new = True
-                if not data:
-                    print('A conexão com o servidor foi perdida')
-                    self.close_connection(soquete)
-                    break
-                elif message_obj['message_type'] == MessageType.QUIT.value: #quit message from other user
-                    print('Seu companheiro de chat desistiu da conversa :(')
-                    self.close_connection(soquete)
-                    self.stacked_widget.setCurrentIndex(0)
-                    break
-                elif message_obj['message_type'] == MessageType.QUIT_CONFIRM.value: #quit message recognizement
-                    print('Escapou da coversa')
-                    self.close_connection(soquete)
-                    self.stacked_widget.setCurrentIndex(0)
-                    break
-                elif message_obj['message_type'] == MessageType.SERVER_RESPONSE.value: #system returning sent message
-                    print('O servidor recebeu a mensagem enviada')
-                    self.update_message_status(message_obj['message_id'], "Enviado")
-                    new = False
-                elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #system returning sent message
-                    print('Seu companheiro de chat recebeu sua mensagem')
-                    self.update_message_status(message_obj['message_id'], 'Recebido')
-                    new = False
-                elif message_obj['message_type'] == MessageType.READ_RESPONSE.value:
-                    print('Seu companheiro de chat leu sua mensagem')
-                    self.update_message_status(message_obj['message_id'], 'Lido')
-                    new = False
-
-                if new:
-                    message_obj['message_type'] = MessageType.RECEIVE_RESPONSE.value
-                    soquete.send((json.dumps(message_obj) + '\n').encode('utf-8'))
-                    if (self.isActiveWindow()):
-                        message_obj['message_type'] = MessageType.READ_RESPONSE.value
-                        soquete.send((json.dumps(message_obj) + '\n').encode('utf-8'))
-                    else:
-                        self.unread_messages.append(message_obj)
-                    self.new_message_signal.emit(message_obj)
-        except Exception as e:
-            print(f"Errinho {e}")
-            print(message_obj)
-
+    
     #|///////////////////////////////////////////////////////////////////////|#
 
     def init_ui(self):
@@ -152,17 +65,14 @@ class ChatScreen(QWidget):
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(0, 0, 0, 0)
 
-        
         #|/// TOP BAR ///////////////////////////////////////////////////////|#
+
         app_bar_container = QFrame()
         app_bar_container.setStyleSheet("background: transparent; ")
-
         app_bar_layout = QVBoxLayout(app_bar_container)
         app_bar_layout.setContentsMargins(0, 0, 0, 0)
-
         app_bar = QFrame()
         app_bar.setFixedHeight(50)
-
         app_bar.setStyleSheet("""
             QFrame {
                 background-color: white;
@@ -171,12 +81,12 @@ class ChatScreen(QWidget):
                 padding-bottom: 1px;
             }
         """)
-
         inner_layout = QHBoxLayout(app_bar)
         inner_layout.setContentsMargins(10, 0, 10, 0)
 
 
         #|/// TOP BAR: BACK BUTTON //////////////////////////////////////////|#
+
         back_button = QPushButton()
         back_button.setIcon(QIcon("icons/arrow-back.svg"))
         back_button.setIconSize(QSize(20, 20))
@@ -189,6 +99,7 @@ class ChatScreen(QWidget):
 
 
         #|/// TOP BAR: TITLE LABEL //////////////////////////////////////////|#
+
         title_label = QLabel("BlaBlaBla Chat")
         title_label.setContentsMargins(0, 4, 0, 0)
         title_label.setStyleSheet("""
@@ -198,7 +109,6 @@ class ChatScreen(QWidget):
             border: none;
             background: transparent;
         """)
-
         inner_layout.addWidget(back_button)
         inner_layout.addWidget(title_label)
         inner_layout.addStretch()
@@ -207,6 +117,7 @@ class ChatScreen(QWidget):
 
 
         #|/// SCROLL AREA ///////////////////////////////////////////////////|#
+
         self.chat_area = QVBoxLayout()
         self.chat_area.addStretch(1)
         container = QWidget()
@@ -219,6 +130,7 @@ class ChatScreen(QWidget):
 
         
         #|/// BOTTOM BAR ////////////////////////////////////////////////////|#
+
         input_layout = QHBoxLayout()
         self.input_field = SingleLineTextEdit()
         self.input_field.returnPressed.connect(self.send_message)
@@ -277,11 +189,95 @@ class ChatScreen(QWidget):
 
     #|///////////////////////////////////////////////////////////////////////|#
 
+    def start_connection(self):
+        receive_thread = threading.Thread(target=self.receive_messages, args=[singletonSocket.get_instance().network_socket], daemon=True) #daemon ensures the thread closes when the main thread ends
+        receive_thread.start()
     
+    #|///////////////////////////////////////////////////////////////////////|#
+
+    def close_connection(self, network_socket):
+        print("Closing the connection")
+        singletonSocket.reset_singleton()
+        self.running = False
+        network_socket.close()
+    
+    #|///////////////////////////////////////////////////////////////////////|#
+
+    def handle_new_message(self, message):
+        widget = ChatMessage("Outro Usuário", message['message'], message['timestamp'], False)
+        self.add_message(widget)
+
+    #|///////////////////////////////////////////////////////////////////////|#
+
+    def on_focus_changed(self):
+        if self.isActiveWindow():
+            for message in self.unread_messages[:]:
+                message['message_type'] = MessageType.READ_RESPONSE.value
+                singletonSocket.get_instance().network_socket.send((json.dumps(message) + '\n').encode('utf-8'))
+                self.unread_messages.remove(message)
+
+    #|///////////////////////////////////////////////////////////////////////|#
+
+    def update_message_status(self, message_id, message_text):
+        for i in range(self.chat_area.count()):  # último item é o 'stretch'
+            widget = self.chat_area.itemAt(i).widget()
+            if widget and widget.property("message_id") == message_id and widget.client_message:
+                # Aqui você faz o que quiser: mudar cor, ícone, texto etc.
+                widget.status_label.setText(str(message_text))
+                break
+
+    #|///////////////////////////////////////////////////////////////////////|#
+
+    def receive_messages(self, network_socket):
+        # global end
+        self.running = True
+        try:
+            while self.running: #doesn't need lock because python is thread safe when accessing boolean or integer variables
+                data = network_socket.recv(1024)
+                message_obj = json.loads(data.decode())
+                new = True
+                if not data:
+                    print('A conexão com o servidor foi perdida')
+                    self.close_connection(network_socket)
+                    break
+                elif message_obj['message_type'] == MessageType.QUIT.value: #quit message from other user
+                    print('Seu companheiro de chat desistiu da conversa :(')
+                    self.close_connection(network_socket)
+                    self.stacked_widget.setCurrentIndex(0)
+                    break
+                elif message_obj['message_type'] == MessageType.QUIT_CONFIRM.value: #quit message recognizement
+                    print('Escapou da coversa')
+                    self.close_connection(network_socket)
+                    self.stacked_widget.setCurrentIndex(0)
+                    break
+                elif message_obj['message_type'] == MessageType.SERVER_RESPONSE.value: #system returning sent message
+                    print('O servidor recebeu a mensagem enviada')
+                    self.update_message_status(message_obj['message_id'], "Enviado")
+                    new = False
+                elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #system returning sent message
+                    print('Seu companheiro de chat recebeu sua mensagem')
+                    self.update_message_status(message_obj['message_id'], 'Recebido')
+                    new = False
+                elif message_obj['message_type'] == MessageType.READ_RESPONSE.value:
+                    print('Seu companheiro de chat leu sua mensagem')
+                    self.update_message_status(message_obj['message_id'], 'Lido')
+                    new = False
+
+                if new:
+                    message_obj['message_type'] = MessageType.RECEIVE_RESPONSE.value
+                    network_socket.send((json.dumps(message_obj) + '\n').encode('utf-8'))
+                    if (self.isActiveWindow()):
+                        message_obj['message_type'] = MessageType.READ_RESPONSE.value
+                        network_socket.send((json.dumps(message_obj) + '\n').encode('utf-8'))
+                    else:
+                        self.unread_messages.append(message_obj)
+                    self.new_message_signal.emit(message_obj)
+        except Exception as e:
+            print(f"Errinho {e}")
+            print(message_obj)
 
     #|///////////////////////////////////////////////////////////////////////|#
     
-
     def send_message(self):
         text = self.input_field.toHtml().strip()
         text_aux = self.input_field.toPlainText().strip()
@@ -303,7 +299,7 @@ class ChatScreen(QWidget):
                 "message_type": message_type, 
                 "message": text_aux
             }
-            singletonSocket.soquete.send((json.dumps(message_json ) + '\n').encode('utf-8')) #teste de envio
+            singletonSocket.get_instance().network_socket.send((json.dumps(message_json ) + '\n').encode('utf-8')) #teste de envio
             self.add_message(message_widget)
             self.input_field.clear()
 
@@ -334,15 +330,12 @@ class ChatScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
     
     def scroll_to_bottom(self):
-        self.scroll.verticalScrollBar().setValue(
-            self.scroll.verticalScrollBar().maximum()
-        )
-
+        self.scroll.verticalScrollBar().setValue(self.scroll.verticalScrollBar().maximum())
 
 
 
 #|///////////////////////////////////////////////////////////////////////////|#
-#| CLASS                                                                     |#
+#| CLASS DEFINITION                                                          |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class SingleLineTextEdit(QTextEdit):
