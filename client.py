@@ -24,13 +24,8 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
-        print("PASSOU 1\n")
         self.first_screen = HomeScreen(self.stacked_widget, self)
-
-        print("PASSOU 2\n")
         self.chat_screen = ChatScreen(self.stacked_widget)
-
-        print("PASSOU 3\n")
 
         self.stacked_widget.addWidget(self.first_screen)
         self.stacked_widget.addWidget(self.chat_screen)

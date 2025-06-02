@@ -2,11 +2,11 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
-import socket as s
 from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout
 from PyQt5.QtCore import Qt
 from shared.singleton_socket import Socket
 from screens.chat_screen import ChatScreen
+from utils.connection_manager import *
 
 
 
@@ -31,38 +31,7 @@ class HomeScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def go_to_chat(self):
-        print("\nENTROU EM go_to_chat()\n")
-        soquete = start_client()
-        Socket(soquete)
+        network_socket = start_client()
+        Socket(network_socket)
         self.main_window.chat_screen.start_connection()
         self.main_window.stacked_widget.setCurrentIndex(1)
-
-
-
-
-def close_connection(soquete):
-    print("Closing the connection")
-    soquete.close()
-
-
-def start_client():
-    global username
-    soquete = s.socket(s.AF_INET, s.SOCK_STREAM)
-
-    # ip = sys.argv[1] if len(sys.argv) > 1 else 'localhost'
-    # porta = int(sys.argv[2]) if len(sys.argv) > 2 else 65432
-    ip = 'localhost'
-    porta = 65432
-
-    # username = input("Select an username: ")
-    username = 'TESTE'
-    server_address = (ip, porta)
-    print(f"Connecting to {server_address}")
-    soquete.connect(server_address)
-
-    try:
-        data = soquete.recv(1024)
-        print(f"Received: {data.decode()}")
-        return soquete
-    except:
-        close_connection(soquete)

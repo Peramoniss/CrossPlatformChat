@@ -1,0 +1,32 @@
+2025-06-02 01:26:31 - WARNING - Nem todos os parâmetros foram definidos. Usando valores padrão.
+2025-06-02 01:26:31 - WARNING - Uso correto: server.py <máscara> <porta>
+2025-06-02 01:26:31 - INFO - Server is listening on ('0.0.0.0', 65432)
+2025-06-02 01:26:34 - INFO - Connection from ('127.0.0.1', 62846) established.
+2025-06-02 01:26:35 - INFO - Connection from ('127.0.0.1', 62847) established.
+2025-06-02 01:26:38 - INFO - Received from 127.0.0.1: ggd
+2025-06-02 01:26:38 - INFO - Received from 127.0.0.1: ggd
+2025-06-02 01:26:38 - INFO - Updating read status to: 0
+2025-06-02 01:26:38 - INFO - Received from 127.0.0.1: ggd
+2025-06-02 01:26:39 - INFO - Received from 127.0.0.1: fdgfdg
+2025-06-02 01:26:39 - INFO - Received from 127.0.0.1: fdgfdg
+2025-06-02 01:26:39 - INFO - Updating read status to: 0
+2025-06-02 01:26:41 - INFO - Received from 127.0.0.1: fdgfdg
+2025-06-02 01:26:41 - ERROR - Connection error: [WinError 10054] Foi forçado o cancelamento de uma conexão existente pelo host remoto
+2025-06-02 01:26:41 - INFO - Server is shutting down.
+2025-06-02 01:33:56 - INFO - Server is listening on ('0.0.0.0', 65432)
+2025-06-02 01:33:57 - INFO - Connection from ('127.0.0.1', 62882) established.
+2025-06-02 01:34:02 - INFO - Connection from ('127.0.0.1', 62883) established.
+2025-06-02 01:34:08 - INFO - Received from 127.0.0.1: ngvngvn
+2025-06-02 01:34:08 - INFO - Received from 127.0.0.1: ngvngvn
+2025-06-02 01:34:09 - INFO - Received from 127.0.0.1: ngvngvn
+2025-06-02 01:34:13 - INFO - Received from 127.0.0.1: Olá
+2025-06-02 01:34:13 - INFO - Received from 127.0.0.1: Olá
+2025-06-02 01:34:15 - INFO - Received from 127.0.0.1: Olá
+2025-06-02 01:34:18 - INFO - Received from 127.0.0.1: Oi
+2025-06-02 01:34:18 - INFO - Received from 127.0.0.1: Oi
+2025-06-02 01:34:19 - INFO - Received from 127.0.0.1: Oi
+2025-06-02 01:34:53 - INFO - Received from 127.0.0.1: Flutter + Firebase = Chernobyl 2
+2025-06-02 01:34:53 - INFO - Received from 127.0.0.1: Flutter + Firebase = Chernobyl 2
+2025-06-02 01:34:55 - INFO - Received from 127.0.0.1: Flutter + Firebase = Chernobyl 2
+2025-06-02 01:34:57 - ERROR - Connection error: [WinError 10054] Foi forçado o cancelamento de uma conexão existente pelo host remoto
+2025-06-02 01:34:57 - INFO - Server is shutting down.
