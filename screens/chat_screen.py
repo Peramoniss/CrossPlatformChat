@@ -5,6 +5,12 @@
 import json
 import random
 import threading
+from PyQt5.QtCore import QSize, pyqtSignal
+from utils.font_manager import FontManager
+from models.chat_message import ChatMessage
+from shared.singleton_socket import Socket as singletonSocket
+from shared.message_type import MessageType 
+
 from PyQt5.QtWidgets import (
     QWidget, 
     QPushButton, 
@@ -21,28 +27,19 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import (
     Qt, 
     QDateTime,
-    QTimer,
-    QEvent
+    QTimer
 )
 
 from PyQt5.QtGui import (
     QIcon,
-    QColor,
     QTextCharFormat,
     QFont
 )
 
-from PyQt5.QtCore import QSize, pyqtSignal
-from utils.font_manager import FontManager
-from models.chat_message import ChatMessage
-
-from globals.singletonSocket import Socket as singletonSocket
-
-from globals.messageType import MessageType 
 
 
 #|///////////////////////////////////////////////////////////////////////////|#
-#| CLASS                                                                     |#
+#| CLASS DEFINITION                                                          |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class ChatScreen(QWidget):
@@ -57,9 +54,9 @@ class ChatScreen(QWidget):
         self.new_message_signal.connect(self.handle_new_message)        
         self.unread_messages = []
         app = QApplication.instance()
+
         if app is not None:
             app.focusChanged.connect(self.on_focus_changed)
-        print("LALALA")
 
 
     def start_connection(self):
@@ -73,7 +70,6 @@ class ChatScreen(QWidget):
         soquete.close()
 
     def handle_new_message(self, message):
-        # timestamp = QDateTime.currentDateTime().toString("hh:mm:ss")
         widget = ChatMessage("Outro Usuário", message['message'], message['timestamp'], False)
         self.add_message(widget)
 
@@ -83,7 +79,7 @@ class ChatScreen(QWidget):
         if self.isActiveWindow():
             for message in self.unread_messages[:]:
                 message['message_type'] = MessageType.READ_RESPONSE.value
-                singletonSocket.soquete.send((json.dumps(message) + '\n').encode('utf-8').strip())
+                singletonSocket.soquete.send((json.dumps(message) + '\n').encode('utf-8'))
                 self.unread_messages.remove(message)
 
         # super().changeEvent(event)

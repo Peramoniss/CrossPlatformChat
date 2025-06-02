@@ -3,23 +3,8 @@
 #|///////////////////////////////////////////////////////////////////////////|#
 
 import sys
-
-from PyQt5.QtWidgets import (
-    QApplication, 
-    QWidget, 
-    QPushButton, 
-    QVBoxLayout, 
-    QHBoxLayout,
-    QTextEdit, 
-    QLineEdit, 
-    QLabel, 
-    QScrollArea, 
-    QMainWindow, 
-    QStackedWidget,
-    QFrame
-)
-
-from globals.singletonSocket import Socket
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
+from shared.singleton_socket import Socket
 from screens import ChatScreen
 from screens import HomeScreen
 from utils.font_manager import FontManager
@@ -36,8 +21,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("BlaBlaBla Chat")
         self.resize(900, 500)
 
-        # self.soquete = None
-
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
@@ -48,12 +31,15 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.chat_screen)
     
     def closeEvent(self, event):
-        print("Janela foi fechada!")
-        # Aqui você pode desconectar sockets, parar threads, salvar estado, etc.
-        Socket.get_instance().soquete.send('\q'.encode())
-        self.chat_screen.close_connection(Socket.get_instance().soquete)
+        socket_instance = Socket.get_instance()
+        
+        if socket_instance.soquete:
+            try:
+                socket_instance.soquete.send('\q'.encode())
+                self.chat_screen.close_connection(socket_instance.soquete)
+            except Exception as e:
+                pass
 
-        # Se quiser permitir o fechamento:
         event.accept()
 
 
@@ -68,5 +54,4 @@ if __name__ == "__main__":
     app.setFont(FontManager.PoppinsSemiBold)
     window = MainWindow()
     window.show()
-
     sys.exit(app.exec_())

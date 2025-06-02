@@ -2,27 +2,46 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
-from PyQt5.QtWidgets import (
-    QWidget, 
-    QPushButton, 
-    QVBoxLayout
-)
-
-from PyQt5.QtCore import (
-    Qt
-)
-
 import socket as s
-from globals import singletonSocket
+from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout
+from PyQt5.QtCore import Qt
+from shared.singleton_socket import Socket
 from screens.chat_screen import ChatScreen
 
+
+
 #|///////////////////////////////////////////////////////////////////////////|#
-#| CLASS                                                                     |#
+#| CLASS DEFINITION                                                          |#
 #|///////////////////////////////////////////////////////////////////////////|#
+
+class HomeScreen(QWidget):
+    def __init__(self, stacked_widget, main_window):
+        super().__init__()
+        self.stacked_widget = stacked_widget
+        self.main_window = main_window
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
+
+        button = QPushButton("Ir para o chat")
+        button.clicked.connect(self.go_to_chat)
+
+        layout.addWidget(button)
+        self.setLayout(layout)
+
+    def go_to_chat(self):
+        print("\nENTROU EM go_to_chat()\n")
+        soquete = start_client()
+        Socket(soquete)
+        self.main_window.chat_screen.start_connection()
+        self.main_window.stacked_widget.setCurrentIndex(1)
+
+
+
 
 def close_connection(soquete):
     print("Closing the connection")
     soquete.close()
+
 
 def start_client():
     global username
@@ -45,23 +64,3 @@ def start_client():
         return soquete
     except:
         close_connection(soquete)
-
-class HomeScreen(QWidget):
-    def __init__(self, stacked_widget, main_window):
-        super().__init__()
-        self.stacked_widget = stacked_widget
-        self.main_window = main_window
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
-
-        button = QPushButton("Ir para o chat")
-        button.clicked.connect(self.go_to_chat)
-
-        layout.addWidget(button)
-        self.setLayout(layout)
-
-    def go_to_chat(self):
-        soquete = start_client()
-        singletonSocket.Socket(soquete)
-        self.main_window.chat_screen.start_connection()
-        self.main_window.stacked_widget.setCurrentIndex(1)

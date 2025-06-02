@@ -1,9 +1,15 @@
+#|///////////////////////////////////////////////////////////////////////////|#
+#| IMPORTS                                                                   |#
+#|///////////////////////////////////////////////////////////////////////////|#
+
 import json
 import socket
 import threading
 import sys
 import logging
-from globals.messageType import MessageType
+from shared.message_type import MessageType
+
+
 
 # Function to handle a client's communication
 def handle_client(client_socket, other_client_socket):

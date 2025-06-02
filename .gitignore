@@ -1,2 +1,4 @@
 /venv
 /peravenv
+__pycache__/
+*.pyc
