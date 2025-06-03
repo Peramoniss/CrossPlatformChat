@@ -3,7 +3,7 @@
 #|///////////////////////////////////////////////////////////////////////////|#
 
 SERVER_LOGGING_MODE = True
-LOG_FILE_PATH = "server.log"
+LOG_FILE_PATH = "server/logs/server.log"
 
 
 

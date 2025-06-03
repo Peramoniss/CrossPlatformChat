@@ -5,8 +5,8 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from shared.singleton_socket import Socket
-from screens import ChatScreen
-from screens import HomeScreen
+from views import ChatScreen
+from views import HomeScreen
 from utils.font_manager import FontManager
 
 
