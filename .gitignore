@@ -51,3 +51,6 @@ coverage.xml
 
 # Windows
 Thumbs.db
+
+# Server logs
+server/logs/

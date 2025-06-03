@@ -2,11 +2,12 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
+import os
 import json
 import random
 import threading
 from PyQt5.QtCore import QSize, pyqtSignal
-from shared.utils.font_manager import FontManager
+from shared.global_utils.font_manager import FontManager
 from client.models.chat_message import ChatMessage
 from shared.singleton_socket import Socket as singletonSocket
 from shared.message_type import MessageType 
@@ -88,7 +89,9 @@ class ChatScreen(QWidget):
         #|/// TOP BAR: BACK BUTTON //////////////////////////////////////////|#
 
         back_button = QPushButton()
-        back_button.setIcon(QIcon("icons/arrow-back.svg"))
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        icon_path = os.path.join(BASE_DIR, "shared", "global_assets", "icons", "arrow-back.svg")
+        back_button.setIcon(QIcon(icon_path))
         back_button.setIconSize(QSize(20, 20))
         back_button.setStyleSheet("""
             background-color: transparent; 

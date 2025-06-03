@@ -4,10 +4,11 @@
 
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
+from PyQt5.QtGui import QIcon
 from client.views import ChatScreen
 from client.views import HomeScreen
 from shared.singleton_socket import Socket
-from shared.utils.font_manager import FontManager
+from shared.global_utils.font_manager import FontManager
 
 
 
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon("shared/global_assets/icons/app_icon.png"))
     FontManager.load_fonts()    
     app.setFont(FontManager.PoppinsSemiBold)
     window = MainWindow()

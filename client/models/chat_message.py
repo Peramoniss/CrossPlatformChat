@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
 )
 
 from PyQt5.QtCore import Qt
-from shared.utils.font_manager import FontManager
+from shared.global_utils.font_manager import FontManager
 
 
 
