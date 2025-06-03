@@ -6,8 +6,8 @@ import json
 import random
 import threading
 from PyQt5.QtCore import QSize, pyqtSignal
-from utils.font_manager import FontManager
-from models.chat_message import ChatMessage
+from shared.utils.font_manager import FontManager
+from client.models.chat_message import ChatMessage
 from shared.singleton_socket import Socket as singletonSocket
 from shared.message_type import MessageType 
 

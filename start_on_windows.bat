@@ -1,5 +1,6 @@
 @echo off
-
-start "Server" cmd /k "python server.py"
-start "Client 1" cmd /k "python client.py"
-start "Client 2" cmd /k "python client.py"
+set ROOT_DIR=%~dp0
+cd /d "%ROOT_DIR%"
+start "Server" cmd /k "python -m server.server"
+start "Client 1" cmd /k "python -m client.client"
+start "Client 2" cmd /k "python -m client.client"

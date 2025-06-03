@@ -13,7 +13,8 @@ class FontManager:
             return
 
         base_dir = os.path.dirname(os.path.dirname(__file__))
-        fonts_dir = os.path.join(base_dir, "fonts")
+        fonts_dir = os.path.join(base_dir, "assets", "fonts")
+
         
         regular_id = QFontDatabase.addApplicationFont(os.path.join(fonts_dir, "Poppins-Regular.ttf"))
         medium_id = QFontDatabase.addApplicationFont(os.path.join(fonts_dir, "Poppins-Medium.ttf"))

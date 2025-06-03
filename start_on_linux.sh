@@ -1,10 +1,5 @@
 #!/bin/bash
-
-# Open a terminal and run the server.
-gnome-terminal --title="Servidor" -- bash -c "python3 server.py; exec bash"
-
-# Open another terminal for client 1.
-gnome-terminal --title="Cliente 1" -- bash -c "python3 client.py; exec bash"
-
-# Open another terminal for client 2.
-gnome-terminal --title="Cliente 2" -- bash -c "python3 client.py; exec bash"
+ROOT_DIR="$(pwd)"
+gnome-terminal --title="Server" -- bash -c "cd \"$ROOT_DIR\" && python3 -m server.server; exec bash"
+gnome-terminal --title="Client 1" -- bash -c "cd \"$ROOT_DIR\" && python3 -m client.client; exec bash"
+gnome-terminal --title="Client 2" -- bash -c "cd \"$ROOT_DIR\" && python3 -m client.client; exec bash"

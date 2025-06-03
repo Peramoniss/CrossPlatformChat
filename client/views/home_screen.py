@@ -5,8 +5,8 @@
 from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout
 from PyQt5.QtCore import Qt
 from shared.singleton_socket import Socket
-from views.chat_screen import ChatScreen
-from utils.connection_manager import *
+from client.views.chat_screen import ChatScreen
+from shared.utils.connection_manager import *
 
 
 
