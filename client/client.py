@@ -2,6 +2,7 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
+import os
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from PyQt5.QtGui import QIcon
@@ -50,7 +51,10 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon("shared/global_assets/icons/app_icon.png"))
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.abspath(os.path.join(base_dir, ".."))
+    icon_path = os.path.join(root_dir, "shared", "global_assets", "icons", "app_icon.png")
+    app.setWindowIcon(QIcon(icon_path))
     FontManager.load_fonts()    
     app.setFont(FontManager.PoppinsSemiBold)
     window = MainWindow()
