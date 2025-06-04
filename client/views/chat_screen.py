@@ -192,9 +192,15 @@ class ChatScreen(QWidget):
 
     #|///////////////////////////////////////////////////////////////////////|#
 
-    def start_connection(self):
-        receive_thread = threading.Thread(target=self.receive_messages, args=[singletonSocket.get_instance().network_socket], daemon=True) #daemon ensures the thread closes when the main thread ends
+    def start_connection(self, username):
+        self.username = username
+        receive_thread = threading.Thread(
+            target = self.receive_messages, 
+            args = [singletonSocket.get_instance().network_socket], 
+            daemon=True
+        )
         receive_thread.start()
+
     
     #|///////////////////////////////////////////////////////////////////////|#
 
@@ -207,7 +213,7 @@ class ChatScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def handle_new_message(self, message):
-        widget = ChatMessage("Outro Usuário", message['message'], message['timestamp'], False)
+        widget = ChatMessage(message.get('user', 'Outro Usuário'), message['message'], message['timestamp'], False)
         self.add_message(widget)
 
     #|///////////////////////////////////////////////////////////////////////|#
@@ -287,7 +293,7 @@ class ChatScreen(QWidget):
         if text_aux:
             message_id = random.randint(1000, 9999)
             timestamp = QDateTime.currentDateTime().toString("hh:mm:ss")
-            message_widget = ChatMessage("Usuário", text, timestamp, True)
+            message_widget = ChatMessage(self.username, text, timestamp, True)
             message_widget.setProperty("message_id", message_id)
 
             message_type = 0 #common message
@@ -296,7 +302,7 @@ class ChatScreen(QWidget):
 
             message_json = {
                 "message_id": message_id,  
-                "user": "Usuário",
+                "user": self.username,
                 "timestamp": timestamp,  
                 "read_status": 0,                          # 1 = lida
                 "message_type": message_type, 
