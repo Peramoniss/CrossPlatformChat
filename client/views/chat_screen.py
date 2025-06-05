@@ -2,6 +2,7 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
+from asyncio import sleep
 import os
 import json
 import random
@@ -45,6 +46,7 @@ from PyQt5.QtGui import (
 
 class ChatScreen(QWidget):
     new_message_signal = pyqtSignal(object)
+    closed = pyqtSignal()
 
     def __init__(self, stacked_widget):
         super().__init__()
@@ -209,6 +211,7 @@ class ChatScreen(QWidget):
         singletonSocket.reset_singleton()
         self.running = False
         network_socket.close()
+        self.closed.emit()
     
     #|///////////////////////////////////////////////////////////////////////|#
 
@@ -240,47 +243,56 @@ class ChatScreen(QWidget):
     def receive_messages(self, network_socket):
         # global end
         self.running = True
+        buffer = ""
+        DELIMITER = '\n'
         try:
             while self.running: #doesn't need lock because python is thread safe when accessing boolean or integer variables
-                data = network_socket.recv(1024)
-                message_obj = json.loads(data.decode())
+                data = network_socket.recv(1024).decode('utf-8')
+                buffer += data
+                # message_obj = json.loads(data.decode())
                 new = True
-                if not data:
-                    print('A conexão com o servidor foi perdida')
-                    self.close_connection(network_socket)
-                    break
-                elif message_obj['message_type'] == MessageType.QUIT.value: #quit message from other user
-                    print('Seu companheiro de chat desistiu da conversa :(')
-                    self.close_connection(network_socket)
-                    self.stacked_widget.setCurrentIndex(0)
-                    break
-                elif message_obj['message_type'] == MessageType.QUIT_CONFIRM.value: #quit message recognizement
-                    print('Escapou da coversa')
-                    self.close_connection(network_socket)
-                    self.stacked_widget.setCurrentIndex(0)
-                    break
-                elif message_obj['message_type'] == MessageType.SERVER_RESPONSE.value: #system returning sent message
-                    print('O servidor recebeu a mensagem enviada')
-                    self.update_message_status(message_obj['message_id'], "Enviado")
-                    new = False
-                elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #system returning sent message
-                    print('Seu companheiro de chat recebeu sua mensagem')
-                    self.update_message_status(message_obj['message_id'], 'Recebido')
-                    new = False
-                elif message_obj['message_type'] == MessageType.READ_RESPONSE.value:
-                    print('Seu companheiro de chat leu sua mensagem')
-                    self.update_message_status(message_obj['message_id'], 'Lido')
-                    new = False
+                while DELIMITER in buffer:
+                    message_str, buffer = buffer.split(DELIMITER, 1)
+                    message_str = message_str.strip()
+                    
+                    if not message_str:  # Ignora strings vazias
+                        continue
+                    message_obj = json.loads(message_str)
+                    if message_obj['message_type'] == MessageType.QUIT.value: #quit message from other user
+                        print('Seu companheiro de chat desistiu da conversa :(')
+                        self.close_connection(network_socket)
+                        self.stacked_widget.setCurrentIndex(0)
+                        break
+                    elif message_obj['message_type'] == MessageType.QUIT_CONFIRM.value: #quit message recognizement
+                        print('Escapou da coversa')
+                        self.close_connection(network_socket)
+                        self.stacked_widget.setCurrentIndex(0)
+                        break
+                    elif message_obj['message_type'] == MessageType.SERVER_RESPONSE.value: #system returning sent message
+                        print('O servidor recebeu a mensagem enviada')
+                        self.update_message_status(message_obj['message_id'], "Enviado")
+                        sleep(0.5)
+                        new = False
+                    elif message_obj['message_type'] == MessageType.RECEIVE_RESPONSE.value: #system returning sent message
+                        print('Seu companheiro de chat recebeu sua mensagem')
+                        self.update_message_status(message_obj['message_id'], 'Recebido')
+                        sleep(0.5)
+                        new = False
+                    elif message_obj['message_type'] == MessageType.READ_RESPONSE.value:
+                        print('Seu companheiro de chat leu sua mensagem')
+                        self.update_message_status(message_obj['message_id'], 'Lido')
+                        sleep(0.5)
+                        new = False
 
-                if new:
-                    message_obj['message_type'] = MessageType.RECEIVE_RESPONSE.value
-                    network_socket.send((json.dumps(message_obj) + '\n').encode('utf-8'))
-                    if (self.isActiveWindow()):
-                        message_obj['message_type'] = MessageType.READ_RESPONSE.value
+                    if new:
+                        message_obj['message_type'] = MessageType.RECEIVE_RESPONSE.value
                         network_socket.send((json.dumps(message_obj) + '\n').encode('utf-8'))
-                    else:
-                        self.unread_messages.append(message_obj)
-                    self.new_message_signal.emit(message_obj)
+                        if (self.isActiveWindow()):
+                            message_obj['message_type'] = MessageType.READ_RESPONSE.value
+                            network_socket.send((json.dumps(message_obj) + '\n').encode('utf-8'))
+                        else:
+                            self.unread_messages.append(message_obj)
+                        self.new_message_signal.emit(message_obj)
         except Exception as e:
             print(f"Errinho {e}")
             print(message_obj)
@@ -304,7 +316,7 @@ class ChatScreen(QWidget):
                 "message_id": message_id,  
                 "user": self.username,
                 "timestamp": timestamp,  
-                "read_status": 0,                          # 1 = lida
+                # "read_status": 0,                          # 1 = lida
                 "message_type": message_type, 
                 "message": text_aux
             }

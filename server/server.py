@@ -40,13 +40,15 @@ def handle_client(client_socket, other_client_socket):
                     
                 try:
                     message_obj = json.loads(message_str)
-                    logging.info(f"Received from {ip}: {message_obj.get('message', '')}")
+                    logging.info(f"Received from {message_obj.get('user', '')} of ip {ip}: {message_obj.get('message', '')}. TYPE - {MessageType(message_obj.get('message_type', '')).name}")
                     
                     # Tratamento dos tipos de mensagem
                     if message_obj.get('message_type') == MessageType.QUIT.value:
                         other_client_socket.send((json.dumps(message_obj) + DELIMITER).encode('utf-8'))
+                        logging.info(f"Sent to {message_obj.get('user', '')} of ip {ip}: {message_obj.get('message', '')}. TYPE - {MessageType(message_obj.get('message_type', '')).name}")
                         message_obj['message_type'] = MessageType.QUIT_CONFIRM.value
                         client_socket.send((json.dumps(message_obj) + DELIMITER).encode('utf-8'))
+                        logging.info(f"Sent {message_obj.get('user', '')} of ip {ip}: {message_obj.get('message', '')}. TYPE - {MessageType(message_obj.get('message_type', '')).name}")
                         break
                         
                     elif message_obj.get('message_type') == MessageType.RECEIVE_RESPONSE.value:

@@ -156,5 +156,6 @@ class HomeScreen(QWidget):
         self.username_input.setEnabled(True)
 
         Socket(network_socket)
+        # self.main_window.chat_screen = ChatScreen(self.main_window.stacked_widget)
         self.main_window.chat_screen.start_connection(self.username_input.text().strip())
         self.main_window.stacked_widget.setCurrentIndex(1)
