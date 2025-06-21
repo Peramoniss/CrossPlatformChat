@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget
 from PyQt5.QtGui import QIcon
 from client.views import ChatScreen
 from client.views import HomeScreen
-from shared.singleton_socket import Socket
+from shared.global_services.singleton_socket import Socket
 from shared.global_utils.font_manager import FontManager
 
 

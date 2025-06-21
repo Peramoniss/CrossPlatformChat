@@ -10,7 +10,7 @@ import threading
 from PyQt5.QtCore import QSize, pyqtSignal
 from shared.global_utils.font_manager import FontManager
 from client.models.chat_message import ChatMessage
-from shared.singleton_socket import Socket as singletonSocket
+from shared.global_services.singleton_socket import Socket as singletonSocket
 from shared.message_type import MessageType 
 
 from PyQt5.QtWidgets import (
