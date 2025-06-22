@@ -111,7 +111,7 @@ class ChatScreen(QWidget):
         """)
         back_button.clicked.connect(self.handle_back_navigation)
 
-        title_label = QLabel("BlaBlaBla Chat")
+        title_label = QLabel("Bla Bla Bla Chat")
         title_label.setContentsMargins(0, 4, 0, 0)
         title_label.setStyleSheet("""
             color: black;
@@ -140,7 +140,7 @@ class ChatScreen(QWidget):
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setWidget(container)
-        self.scroll.setStyleSheet("background-color: #e6e6e6; border: none;")
+        self.scroll.setStyleSheet("background-color: #F0F0F0; border: none;")
 
         self.main_layout.addWidget(self.scroll)
 
@@ -170,6 +170,35 @@ class ChatScreen(QWidget):
             padding: 5px;
             background-color: white;
             border-top: 1px solid rgba(0, 0, 0, 40);
+        """)
+
+        self.scroll.verticalScrollBar().setStyleSheet("""
+            QScrollBar:vertical {
+                background: transparent;
+                width: 10px;
+                margin: 4px 2px 4px 2px;
+                border-radius: 5px;
+            }
+
+            QScrollBar::handle:vertical {
+                background: rgba(100, 100, 100, 80);
+                min-height: 20px;
+                border-radius: 5px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background: rgba(100, 100, 100, 160);
+            }
+
+            QScrollBar::add-line:vertical,
+            QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+
+            QScrollBar::add-page:vertical,
+            QScrollBar::sub-page:vertical {
+                background: none;
+            }
         """)
 
         self.main_layout.addWidget(input_frame)
@@ -306,7 +335,7 @@ class ChatScreen(QWidget):
             "user": self.username,
             "timestamp": timestamp,
             "message_type": msg_type,
-            "message": text_plain
+            "message": text_html
         }
         
         self.add_message_to_layout(message_widget)

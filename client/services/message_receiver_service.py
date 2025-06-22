@@ -2,7 +2,6 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
-from asyncio import sleep
 import json
 from shared.message_type import MessageType
 
@@ -54,12 +53,9 @@ class MessageReceiverService:
             self.callbacks['on_leave_confirmation'](message)
         elif msg_type == MessageType.SERVER_RESPONSE.value:
             self.callbacks['on_sent'](message)
-            sleep(0.5)
         elif msg_type == MessageType.RECEIVE_RESPONSE.value:
             self.callbacks['on_received'](message)
-            sleep(0.5)
         elif msg_type == MessageType.READ_RESPONSE.value:
             self.callbacks['on_read'](message)
-            sleep(0.5)
         else:
             self.callbacks['on_new'](message)
