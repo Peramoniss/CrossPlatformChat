@@ -4,9 +4,11 @@
 
 import os
 from client.services.notification_service import NotificationManager
-from shared.global_services.singleton_socket_service import Socket
+import shared.global_services.encryption_service as encryption
+from shared.global_services.singleton_socket_service import Socket as singleton_socket
 from shared.global_utils.font_manager import FontManager
-from shared.global_utils.connection_manager import start_client
+from shared.global_services.connection_manager import start_client
+import struct
 from PyQt5.QtSvg import QSvgRenderer
 
 from PyQt5.QtGui import (
@@ -48,30 +50,42 @@ class ConnectionThread(QThread):
     connected = pyqtSignal(object)
     error = pyqtSignal(Exception)
 
-    def __init__(self):
+    def __init__(self, room_code):
         super().__init__()
         self._is_running = True
+        self.room_code = room_code
 
     def run(self):
         try:
-            for _ in range(30):
-                if not self._is_running:
-                    return
-                self.msleep(100)
-
             if not self._is_running:
                 return
+            
+            self.network_socket = start_client(self.room_code)
+            print("Entrou")
 
-            network_socket = start_client()
-            if not self._is_running:
-                return
+            private_key, public_pem, private_pem = encryption.create_rsa_keys()
+            singleton_socket.initialize(self.network_socket)
+            socket = singleton_socket.get_instance()
 
-            self.connected.emit(network_socket)
+            socket.send(public_pem)
+
+            encrypted_aes = self.network_socket.recv(1024)
+            aes_key = encryption.rsa_decrypt(private_key, encrypted_aes)
+            singleton_socket.set_key(aes_key)
+
+            self.connected.emit(self.network_socket)
         except Exception as e:
             self.error.emit(e)
 
+
     def stop(self):
         self._is_running = False
+        if self.network_socket:
+            try:
+                self.network_socket.close()
+            except:
+                pass
+
 
 
 
@@ -234,7 +248,7 @@ class HomeScreen(QWidget):
         self.right_layout.addWidget(self.button)
 
         # Botão de cancelar (inicialmente oculto)
-        self.cancel_button = QPushButton("Cancelar")
+        self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setFixedHeight(40)
         self.cancel_button.setStyleSheet("""
             QPushButton {
@@ -251,13 +265,6 @@ class HomeScreen(QWidget):
         self.cancel_button.hide()
         self.cancel_button.clicked.connect(self.cancel_connection)
         self.right_layout.addWidget(self.cancel_button)
-
-        # Mensagem de erro (oculta por padrão)
-        self.error_label = QLabel("Username is required.")
-        self.error_label.setStyleSheet("color: red; font-size: 12px;")
-        self.error_label.setAlignment(Qt.AlignCenter)
-        self.error_label.hide()
-        self.right_layout.addWidget(self.error_label)
 
         # Barra de progresso na parte inferior
         self.progress_bar = QProgressBar()
@@ -304,21 +311,26 @@ class HomeScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def go_to_chat(self):
+        room_code = self.room_code_input.text()
+        if not room_code:
+            self.notification_manager.show_notification("Room code is required.")
+            return
+        
         username = self.username_input.text().strip()
 
         if not username:
             self.notification_manager.show_notification("Username is required.")
             return
 
-        self.error_label.hide()
         self.button.setEnabled(False)
         self.username_input.setEnabled(False)
         self.room_code_input.setEnabled(False)
         self.progress_bar.show()
         self.cancel_button.show()
 
-        self.thread = ConnectionThread()
+        self.thread = ConnectionThread(room_code)
         self.thread.connected.connect(self.on_connected)
+        print("Ueue")
         self.thread.error.connect(self.on_connection_error)
         self.thread.start()
     
@@ -334,7 +346,6 @@ class HomeScreen(QWidget):
         self.button.setEnabled(True)
         self.username_input.setEnabled(True)
         self.room_code_input.setEnabled(True)
-        self.error_label.hide()
     
     #|///////////////////////////////////////////////////////////////////////|#
 
@@ -345,7 +356,7 @@ class HomeScreen(QWidget):
         self.username_input.setEnabled(True)
         self.room_code_input.setEnabled(True)
 
-        Socket(network_socket)
+        
         self.main_window.chat_screen.start_connection(self.username_input.text().strip())
         self.main_window.stacked_widget.setCurrentIndex(1)
     
@@ -357,9 +368,7 @@ class HomeScreen(QWidget):
         self.button.setEnabled(True)
         self.username_input.setEnabled(True)
         self.room_code_input.setEnabled(True)
-        self.error_label.setText(f"Erro de conexão: {str(exception)}")
-        self.error_label.show()
-
+        self.notification_manager.show_notification(f"Connection error: {str(exception)}")
     #|///////////////////////////////////////////////////////////////////////|#
     
     def create_tiled_svg_brush(self, svg_path):

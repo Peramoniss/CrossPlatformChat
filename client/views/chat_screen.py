@@ -9,6 +9,7 @@ import uuid
 import threading
 from client.models.chat_message_model import ChatMessageModel
 from client.services.message_receiver_service import MessageReceiverService
+import shared.global_services.encryption_service as encryption   
 from shared.global_utils.font_manager import FontManager
 from shared.global_services.singleton_socket_service import Socket as singletonSocket
 from shared.global_definitions import MessageType 
@@ -239,8 +240,8 @@ class ChatScreen(QWidget):
     def start_connection(self, username):
         self.username = username
         self.receiver = MessageReceiverService(
-            singletonSocket.get_instance().network_socket,
-            callbacks={
+            singletonSocket.get_instance(),
+            callbacks={ #um dicionário de funções para utilizar interagir entre as classes quando necessário
                 'on_leave_request': self.handle_leave_request,
                 'on_leave_confirmation': self.handle_leave_confirmation,
                 'on_sent': lambda msg: self.update_message_status(msg['message_id'], 'Enviado'),
@@ -262,25 +263,28 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def handle_leave_request(self, message):
-        self.close_connection(singletonSocket.get_instance().network_socket)
+        self.close_connection(singletonSocket.get_instance())
         self.stacked_widget.setCurrentIndex(0)
 
     ###########################################################################
 
     def handle_leave_confirmation(self, message):
-        self.close_connection(singletonSocket.get_instance().network_socket)
+        self.close_connection(singletonSocket.get_instance())
         self.stacked_widget.setCurrentIndex(0)
 
     ###########################################################################
 
     def process_incoming_message(self, message):
         message['message_type'] = MessageType.RECEIVE_RESPONSE.value
-        socket = singletonSocket.get_instance().network_socket
-        socket.send((json.dumps(message) + '\n').encode('utf-8'))
-
+        socket = singletonSocket.get_instance()
+        aes_key = singletonSocket.get_key()
+        sending_data = (json.dumps(message) + '\n').encode('utf-8')
+        encryption.send_aes_message(socket, sending_data, aes_key)
+        
         if self.isActiveWindow():
             message['message_type'] = MessageType.READ_RESPONSE.value
-            socket.send((json.dumps(message) + '\n').encode('utf-8'))
+            sending_data = (json.dumps(message) + '\n').encode('utf-8')
+            encryption.send_aes_message(socket, sending_data, aes_key)
         else:
             self.unread_messages.append(message)
 
@@ -298,7 +302,7 @@ class ChatScreen(QWidget):
         try:
             if singletonSocket.is_initialized():
                 self.send_message(text_override='\\q')
-                socket = singletonSocket.get_instance().network_socket
+                socket = singletonSocket.get_instance()
                 self.close_connection(socket)
         except Exception:
             pass
@@ -338,11 +342,14 @@ class ChatScreen(QWidget):
             "user": self.username,
             "timestamp": timestamp,
             "message_type": msg_type,
-            "message": text_html
+            "message": text_plain
         }
         
         self.add_message_to_layout(message_widget)
-        singletonSocket.get_instance().network_socket.send((json.dumps(message_data) + '\n').encode('utf-8'))
+        socket = singletonSocket.get_instance()
+        aes_key = singletonSocket.get_key()
+        sending_data = (json.dumps(message_data) + '\n').encode('utf-8')
+        encryption.send_aes_message(socket, sending_data, aes_key)
 
         if text_override is None:
             self.input_field.clear()
@@ -366,8 +373,10 @@ class ChatScreen(QWidget):
         if self.isActiveWindow():
             for msg in self.unread_messages[:]:
                 msg['message_type'] = MessageType.READ_RESPONSE.value
-                socket = singletonSocket.get_instance().network_socket
-                socket.send((json.dumps(msg) + '\n').encode('utf-8'))
+                socket = singletonSocket.get_instance()
+                aes_key = singletonSocket.get_key()
+                sending_data = (json.dumps(msg) + '\n').encode('utf-8')
+                encryption.send_aes_message(socket, sending_data, aes_key)
                 self.unread_messages.remove(msg)
 
     ###########################################################################

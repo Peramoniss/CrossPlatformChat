@@ -1,2 +1,2 @@
 from .font_manager import FontManager
-from .connection_manager import *
+from ..global_services.connection_manager import *

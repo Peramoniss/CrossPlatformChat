@@ -4,13 +4,15 @@
 
 import json
 from shared.global_definitions import MessageType
-
+from shared.global_services.singleton_socket_service import Socket as singleton_socket
+import shared.global_services.encryption_service as encryption
 
 
 #|///////////////////////////////////////////////////////////////////////////|#
 #| CLASS DEFINITION                                                          |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
+DELIMITER = '\n'
 class MessageReceiverService:
     def __init__(self, socket, callbacks):
         self.socket = socket
@@ -20,18 +22,16 @@ class MessageReceiverService:
 
     ###########################################################################
 
-    def stop(self):
-        self.running = False
-
-    ###########################################################################
-
     def receive_loop(self):
+        key = singleton_socket.get_key()
         try:
             while self.running:
-                data = self.socket.recv(1024).decode('utf-8')
+                print("WAITING FOR THE RAPTURE")
+                data = encryption.recv_aes_message(self.socket, key)
+                print("WAITED FOR THE RAPTURE")
                 self.buffer += data
-                while '\n' in self.buffer:
-                    msg_str, self.buffer = self.buffer.split('\n', 1)
+                while DELIMITER in self.buffer:
+                    msg_str, self.buffer = self.buffer.split(DELIMITER, 1)
                     msg_str = msg_str.strip()
 
                     if not msg_str:
