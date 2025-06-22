@@ -18,7 +18,7 @@ from shared.global_utils.font_manager import FontManager
 #| CLASS DEFINITION                                                          |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
-class ChatMessage(QWidget):
+class ChatMessageModel(QWidget):
     def __init__(self, username, text, timestamp, client_message):
         super().__init__()
 
@@ -37,6 +37,7 @@ class ChatMessage(QWidget):
             sender_html = f"<b><span style='color: green;'>{username}</span></b>"
         else:
             sender_html = f"<b><span style='color: #333;'>{username}</b>"
+        
         user_label = QLabel(sender_html)
         user_label.setFont(FontManager.PoppinsSemiBold)
         user_label.setStyleSheet("font-size: 13px;")
@@ -58,7 +59,7 @@ class ChatMessage(QWidget):
         message_label.setContentsMargins(0, 0, 0, 0)
 
         if client_message:
-            self.status_label = QLabel("Enviando...")  # ou "", se preferir vazio
+            self.status_label = QLabel("Enviando...")
             self.status_label.setStyleSheet("font-size: 10px; color: #888888;")
             self.status_label.setVisible(True)
             layout.addWidget(self.status_label)

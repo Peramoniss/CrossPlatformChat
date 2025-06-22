@@ -1,1 +1,1 @@
-from .chat_message import ChatMessage
+from .chat_message_model import ChatMessageModel

@@ -1,4 +1,8 @@
-# Local Network Chat
+# Bla Bla Bla Protocol
+A
+
+
+# Bla Bla Bla Chat
 A cross-platform chat application designed to run on a local network using sockets, following a client-server architecture.
 
 ## Development Setup

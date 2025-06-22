@@ -4,21 +4,38 @@
 
 import os
 from shared.global_services.singleton_socket import Socket
-from client.views.chat_screen import ChatScreen
-from shared.global_utils.connection_manager import start_client
 from shared.global_utils.font_manager import FontManager
-from PyQt5.QtGui import QPainter, QPainterPath, QLinearGradient, QRadialGradient, QConicalGradient, QColor, QFontMetrics
+from shared.global_utils.connection_manager import start_client
+from PyQt5.QtSvg import QSvgRenderer
 
-from PyQt5.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QSpacerItem, QSizePolicy, QProgressBar, QGraphicsDropShadowEffect
+from PyQt5.QtGui import (
+    QPainter, 
+    QPainterPath, 
+    QLinearGradient, 
+    QColor, 
+    QFontMetrics, 
+    QImage,
+    QPixmap, 
+    QBrush
 )
 
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QPixmap, QBrush
-from PyQt5.QtSvg import QSvgRenderer
-from PyQt5.QtSvg import QSvgRenderer
-from PyQt5.QtGui import QImage, QPixmap, QBrush
+from PyQt5.QtWidgets import (
+    QWidget, 
+    QVBoxLayout, 
+    QLabel, 
+    QLineEdit, 
+    QPushButton,
+    QSpacerItem, 
+    QSizePolicy, 
+    QProgressBar, 
+    QGraphicsDropShadowEffect
+)
+
+from PyQt5.QtCore import (
+    Qt, 
+    QThread, 
+    pyqtSignal
+)
 
 
 
@@ -36,16 +53,10 @@ class ConnectionThread(QThread):
 
     def run(self):
         try:
-            # Simulando uma espera ou tentativa de conexão com checagem periódica
-            # Aqui você deve adaptar start_client para ser "cancelável"
-            # Se start_client for bloqueante, você precisa adaptar ele também
-            # Para exemplo, um loop checando o flag:
-
-            for _ in range(50):  # Exemplo: tenta por 5 segundos (50 * 0.1)
+            for _ in range(30):
                 if not self._is_running:
-                    # Thread foi cancelada
                     return
-                self.msleep(100)  # 100ms
+                self.msleep(100)
 
             if not self._is_running:
                 return
@@ -70,8 +81,7 @@ class ConnectionThread(QThread):
 class GradientLabel(QLabel):
     def __init__(self, text="", parent=None):
         super().__init__(text, parent)
-        self.gradient_colors = [(0, QColor(18, 62, 205)),
-                                (1, QColor(40, 115, 246))]
+        self.gradient_colors = [(0, QColor(18, 62, 205)), (1, QColor(40, 115, 246))]
 
     def setGradientColors(self, colors):
         self.gradient_colors = colors
@@ -81,29 +91,21 @@ class GradientLabel(QLabel):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.TextAntialiasing)
-
         rect = self.rect()
-
         gradient = QLinearGradient(rect.topLeft(), rect.topRight())
+
         for pos, color in self.gradient_colors:
             gradient.setColorAt(pos, color)
 
         font = self.font()
         text = self.text()
         painter.setFont(font)
-
-        # Calcula posição do texto
         metrics = QFontMetrics(font)
         text_rect = metrics.boundingRect(text)
-
-        x = 0  # Alinhado à esquerda
+        x = 0
         y = (rect.height() + text_rect.height()) / 2 - metrics.descent()
-
-        # Cria path com o texto
         path = QPainterPath()
         path.addText(x, y, font, text)
-
-        # Aplica o gradiente como brush e desenha o path
         painter.setBrush(gradient)
         painter.setPen(Qt.NoPen)
         painter.drawPath(path)
@@ -311,7 +313,6 @@ class HomeScreen(QWidget):
         self.username_input.setEnabled(False)
         self.room_code_input.setEnabled(False)
         self.progress_bar.show()
-
         self.cancel_button.show()
 
         self.thread = ConnectionThread()

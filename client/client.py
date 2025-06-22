@@ -20,22 +20,17 @@ from shared.global_utils.font_manager import FontManager
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("BlaBlaBla Chat")
+        self.setWindowTitle("Bla Bla Bla Chat")
         self.resize(900, 500)
-
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
-
-        self.first_screen = HomeScreen(self.stacked_widget, self)
-        # self.chat_screen = ChatScreen(self.stacked_widget)
-
-        self.stacked_widget.addWidget(self.first_screen)
-        # self.stacked_widget.addWidget(self.chat_screen)
-
+        self.home_screen = HomeScreen(self.stacked_widget, self)
+        self.stacked_widget.addWidget(self.home_screen)
         self.chat_screen = None
         self.create_chat_screen()
         self.chat_screen.closed.connect(self.handle_chat_closed)
-
+    
+    #|///////////////////////////////////////////////////////////////////////|#
 
     def closeEvent(self, event):
         if Socket.is_initialized():
@@ -48,6 +43,7 @@ class MainWindow(QMainWindow):
 
         event.accept()
 
+    #|///////////////////////////////////////////////////////////////////////|#
 
     def create_chat_screen(self):
         if self.chat_screen:
@@ -58,10 +54,11 @@ class MainWindow(QMainWindow):
         self.chat_screen.closed.connect(self.handle_chat_closed)
         self.stacked_widget.addWidget(self.chat_screen)
 
+    #|///////////////////////////////////////////////////////////////////////|#
+
     def handle_chat_closed(self):
-        print("Chat foi fechado. Recriando...")
         self.create_chat_screen()
-        self.stacked_widget.setCurrentIndex(0)  # volta pra Home
+        self.stacked_widget.setCurrentIndex(0)
 
 
 #|///////////////////////////////////////////////////////////////////////////|#
@@ -70,12 +67,15 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
     base_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.abspath(os.path.join(base_dir, ".."))
     icon_path = os.path.join(root_dir, "shared", "global_assets", "icons", "app_icon.png")
     app.setWindowIcon(QIcon(icon_path))
+
     FontManager.load_fonts()    
     app.setFont(FontManager.PoppinsSemiBold)
+
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
