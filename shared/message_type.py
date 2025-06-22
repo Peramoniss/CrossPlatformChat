@@ -4,14 +4,16 @@
 
 from enum import Enum
 
+
+
 #|///////////////////////////////////////////////////////////////////////////|#
 #| ENUMERATION DEFINITION                                                    |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class MessageType(Enum):
     COMMON = 0
-    QUIT = 1
-    SERVER_RESPONSE = 2
-    QUIT_CONFIRM = 3
+    LEAVE_REQUEST = 100
+    LEAVE_CONFIRMATION = 110
+    SERVER_RESPONSE = 3
     RECEIVE_RESPONSE = 4
     READ_RESPONSE = 5

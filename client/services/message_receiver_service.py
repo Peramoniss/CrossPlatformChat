@@ -2,6 +2,7 @@
 #| IMPORTS                                                                   |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
+from asyncio import sleep
 import json
 from shared.message_type import MessageType
 
@@ -40,19 +41,25 @@ class MessageReceiverService:
                     message = json.loads(msg_str)
                     self.handle_message(message)
         
-        except Exception as e:
-            print(f"[MessageReceiver] Erro: {e}")
+        except:
+            pass
     
     ###########################################################################
 
     def handle_message(self, message):
-        if message['message_type'] == MessageType.QUIT.value:
-            self.callbacks['on_quit'](message)
-        elif message['message_type'] == MessageType.SERVER_RESPONSE.value:
+        msg_type = message['message_type']
+        if msg_type == MessageType.LEAVE_REQUEST.value:
+            self.callbacks['on_leave_request'](message)
+        elif msg_type == MessageType.LEAVE_CONFIRMATION.value:
+            self.callbacks['on_leave_confirmation'](message)
+        elif msg_type == MessageType.SERVER_RESPONSE.value:
             self.callbacks['on_sent'](message)
-        elif message['message_type'] == MessageType.RECEIVE_RESPONSE.value:
+            sleep(0.5)
+        elif msg_type == MessageType.RECEIVE_RESPONSE.value:
             self.callbacks['on_received'](message)
-        elif message['message_type'] == MessageType.READ_RESPONSE.value:
+            sleep(0.5)
+        elif msg_type == MessageType.READ_RESPONSE.value:
             self.callbacks['on_read'](message)
+            sleep(0.5)
         else:
             self.callbacks['on_new'](message)
