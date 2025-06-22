@@ -7,7 +7,7 @@ import socket
 import threading
 import sys
 import logging
-from shared.message_type import MessageType
+from shared.global_definitions import MessageType
 from shared.global_definitions import SERVER_LOGGING_MODE, LOG_FILE_PATH
 
 

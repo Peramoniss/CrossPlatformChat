@@ -22,12 +22,12 @@ def start_client():
     # username = input("Select an username: ")
     #username = 'TESTE'
     server_address = (ip, porta)
-    print(f"Connecting to {server_address}")
+    #print(f"Connecting to {server_address}")
     network_socket.connect(server_address)
 
     try:
         data = network_socket.recv(1024)
-        print(f"Received: {data.decode()}")
+        #print(f"Received: {data.decode()}")
         return network_socket
     except:
         network_socket.close()

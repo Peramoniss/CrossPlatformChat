@@ -10,8 +10,8 @@ import threading
 from client.models.chat_message_model import ChatMessageModel
 from client.services.message_receiver_service import MessageReceiverService
 from shared.global_utils.font_manager import FontManager
-from shared.global_services.singleton_socket import Socket as singletonSocket
-from shared.message_type import MessageType 
+from shared.global_services.singleton_socket_service import Socket as singletonSocket
+from shared.global_definitions import MessageType 
 
 from PyQt5.QtWidgets import (
     QWidget, 
@@ -311,7 +311,10 @@ class ChatScreen(QWidget):
         for i in range(self.chat_area.count()):
             widget = self.chat_area.itemAt(i).widget()
             if widget and widget.property("message_id") == message_id and widget.client_message:
-                widget.status_label.setText(status_text)
+                current_text = widget.status_label.text()
+                if " - " in current_text:
+                    _, time_part = current_text.split(" - ", 1)
+                    widget.status_label.setText(f"{status_text} - {time_part}")
                 break
 
     ###########################################################################

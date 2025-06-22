@@ -1,6 +1,14 @@
 # Bla Bla Bla Protocol
 A
 
+```mermaid
+sequenceDiagram
+    Client_1->>Server: Sends the message to the Server
+    Server->>Client_1: Confirms the message was sent to the server
+    Server->>Client_2: Sends the message to Client_2
+    Client_2->>Server: Confirms receipt to the server
+    Server->>Client_1: Confirms the message was received by Client_2
+```
 
 # Bla Bla Bla Chat
 A cross-platform chat application designed to run on a local network using sockets, following a client-server architecture.

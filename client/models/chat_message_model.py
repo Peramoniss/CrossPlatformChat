@@ -75,25 +75,20 @@ class ChatMessageModel(QWidget):
         username_label.setFont(FontManager.PoppinsSemiBold)
         username_label.setStyleSheet("font-size: 13px; color: #076dc5;" if client_message else "font-size: 13px; color: #333;")
 
-        timestamp_label = QLabel(timestamp)
-        timestamp_label.setFont(FontManager.PoppinsMedium)
-        timestamp_label.setStyleSheet("font-size: 12px; color: #999;")
-
-        self.status_label = QLabel()
-        self.status_label.setFont(FontManager.PoppinsMedium)
-        self.status_label.setStyleSheet("font-size: 10px; color: #888;")
-        self.status_label.setVisible(client_message)
-
         if client_message:
-            self.status_label.setText("Enviando...")
+            status_and_time_label = QLabel(f"Enviando... - {timestamp}")
+            status_and_time_label.setFont(FontManager.PoppinsMedium)
+            status_and_time_label.setStyleSheet("font-size: 12px; color: #888;")
             header_layout.addWidget(username_label)
-            header_layout.addWidget(timestamp_label)
-            header_layout.addWidget(self.status_label)
             header_layout.addStretch()
+            header_layout.addWidget(status_and_time_label)
+            self.status_label = status_and_time_label
         else:
-            header_layout.addStretch()
-            header_layout.addWidget(self.status_label)
+            timestamp_label = QLabel(timestamp)
+            timestamp_label.setFont(FontManager.PoppinsMedium)
+            timestamp_label.setStyleSheet("font-size: 12px; color: #999;")
             header_layout.addWidget(timestamp_label)
+            header_layout.addStretch()
             header_layout.addWidget(username_label)
 
         # Mensagem

@@ -3,7 +3,8 @@
 #|///////////////////////////////////////////////////////////////////////////|#
 
 import os
-from shared.global_services.singleton_socket import Socket
+from client.services.notification_service import NotificationManager
+from shared.global_services.singleton_socket_service import Socket
 from shared.global_utils.font_manager import FontManager
 from shared.global_utils.connection_manager import start_client
 from PyQt5.QtSvg import QSvgRenderer
@@ -297,6 +298,7 @@ class HomeScreen(QWidget):
         icon_path = os.path.join(root_dir, "shared", "global_assets", "icons", "morphing-diamonds.svg")
         
         self.background_brush = self.create_tiled_svg_brush(icon_path)
+        self.notification_manager = NotificationManager(self)
         self.update()
 
     #|///////////////////////////////////////////////////////////////////////|#
@@ -305,7 +307,7 @@ class HomeScreen(QWidget):
         username = self.username_input.text().strip()
 
         if not username:
-            self.error_label.show()
+            self.notification_manager.show_notification("Username is required.")
             return
 
         self.error_label.hide()

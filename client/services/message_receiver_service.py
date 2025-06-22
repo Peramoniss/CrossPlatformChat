@@ -3,7 +3,7 @@
 #|///////////////////////////////////////////////////////////////////////////|#
 
 import json
-from shared.message_type import MessageType
+from shared.global_definitions import MessageType
 
 
 

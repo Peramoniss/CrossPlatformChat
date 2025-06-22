@@ -1,0 +1,6 @@
+sequenceDiagram
+    Client_1->>Server: Sends the message to the server
+    Server->>Client_1: Confirms the message was sent to the server
+    Server->>Client_2: Sends the message to Client_2
+    Client_2->>Server: Confirms receipt to the server
+    Server->>Client_1: Confirms the message was received by Client_2
