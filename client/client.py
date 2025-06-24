@@ -33,12 +33,14 @@ class MainWindow(QMainWindow):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def closeEvent(self, event):
+        print("Fechando")
         if Socket.is_initialized():
             try:
-                socket_instance = Socket.get_instance()
-                socket_instance.soquete.send('\q'.encode())
-                self.chat_screen.close_connection(socket_instance.soquete)
-            except:
+                self.chat_screen.send_message(text='\\q')
+                socket = Socket.get_instance()
+                socket.recv(1024)
+                self.chat_screen.close_connection(socket)
+            except Exception:
                 pass
 
         event.accept()

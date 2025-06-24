@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QTextDocument
 from shared.global_utils.font_manager import FontManager
 
 
@@ -21,7 +22,19 @@ from shared.global_utils.font_manager import FontManager
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class ChatMessageModel(QWidget):
+    """
+    Widget that represents a message in the chat screen.
+    """
     def __init__(self, username, text, timestamp, client_message, parent=None):
+        """
+        Creates a new message in the chat screen.
+
+        :param username: The name of the user that sent this message.
+        :param text: The text of the message.
+        :param timestamp: The datetime of the moment the message was sent.
+        :param client_message: A boolean field that is True when the message was sent by the user and False when received by another user.
+        :param parent: The parent widget of the message.
+        """
         super().__init__(parent)
 
         self.client_message = client_message
@@ -76,7 +89,7 @@ class ChatMessageModel(QWidget):
         username_label.setStyleSheet("font-size: 13px; color: #076dc5;" if client_message else "font-size: 13px; color: #333;")
 
         if client_message:
-            status_and_time_label = QLabel(f"Enviando... - {timestamp}")
+            status_and_time_label = QLabel(f"Sending... - {timestamp}")
             status_and_time_label.setFont(FontManager.PoppinsMedium)
             status_and_time_label.setStyleSheet("font-size: 12px; color: #888;")
             header_layout.addWidget(username_label)

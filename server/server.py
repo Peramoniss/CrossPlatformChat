@@ -60,7 +60,11 @@ def handle_client(client_socket, other_client_socket, keys, index):
                         encryption.send_aes_message(client_socket, sending_data, aes_key)
                         logging.info(f"Sent {message_obj.get('user', '')} of ip {ip}: {message_obj.get('message', '')}. TYPE - {MessageType(message_obj.get('message_type', '')).name}")
                         print("Received by the other dude")
-                        break
+                        try:
+                            other_client_socket.close()
+                        except:
+                            print("Connection already closed")
+                        return
                         
                     elif message_obj.get('message_type') == MessageType.RECEIVE_RESPONSE.value:
                         #logging.info(f"Updating read status to: {message_obj.get('read_status', '')}")

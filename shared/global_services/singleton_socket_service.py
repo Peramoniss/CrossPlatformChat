@@ -12,30 +12,19 @@ import threading
 
 class Socket:
     """
-    Singleton class that manages a single instance of a network socket
-    throughout the application's lifecycle.
+    Singleton, static class, that manages a single instance of a network socket
+    throughout the chat session.
+    Avoid instancing objects of this class.
     """
     
     __instance = None
     __lock = threading.Lock()
-    __encryption_key = None
+    __encryption_key = None #Also managing the encryption key for the session
 
     #|///////////////////////////////////////////////////////////////////////|#
 
-    #Talvez seja melhor só remover o inicializador?
-    def __init__(self, network_socket):
-        # """
-        # Initializes the singleton with the provided socket instance.
-        # This constructor is deprecated and should not be called directly — use `initialize()` instead.
-        
-        # :param network_socket: A valid socket object.
-        # :raises Exception: If an instance already exists.
-        # """
-        # if Socket.__instance is not None:
-        #     raise Exception("Socket instance already exists.")
-        
-        # self.network_socket = network_socket
-        # Socket.__instance = self
+    #A static class doesn't need to be instanced
+    def __init__(self):
         ...
 
     #|///////////////////////////////////////////////////////////////////////|#
@@ -44,16 +33,13 @@ class Socket:
     def initialize(network_socket):
         """
         Initializes the singleton instance with a valid socket.
-        Should be called only once during application startup, or after instance has been reset.
+        Should be called only once during application startup, or after the instance has been reset.
 
         :param network_socket: A valid socket object.
         :raises Exception: If the singleton is already initialized.
         """
-        with Socket.__lock:
-            print("AAAA")
+        with Socket.__lock: #securing the usage from other threads 
             if Socket.__instance is None:
-                print("BBBB")
-                # Socket(network_socket)
                 Socket.__instance = network_socket
             else:
                 raise Exception("Socket has already been initialized.")
@@ -63,10 +49,10 @@ class Socket:
     @staticmethod
     def get_instance():
         """
-        Returns the singleton instance.
+        Returns the socket's singleton instance.
 
-        :return: The Socket singleton instance.
-        :raises Exception: If the singleton has not been initialized yet.
+        :return: The socket's singleton instance.
+        :raises Exception: If the singleton has not been initialized yet. Use initialize method before get_instance.
         """
         if Socket.__instance is None:
             raise Exception("Socket is not initialized.")
@@ -77,7 +63,7 @@ class Socket:
     @staticmethod
     def is_initialized():
         """
-        Checks whether the singleton has been initialized.
+        Checks whether or not the socket has been initialized.
 
         :return: True if initialized, False otherwise.
         """
@@ -88,7 +74,7 @@ class Socket:
     @staticmethod
     def reset_singleton():
         """
-        Resets the singleton instance.
+        Resets the socket's singleton instance.
         """
         Socket.__instance = None
         Socket.__encryption_key = None
@@ -97,10 +83,18 @@ class Socket:
 
     @staticmethod
     def set_key(key):
+        """
+        Sets the encryption key.
+        """
         Socket.__encryption_key = key
     
     #|///////////////////////////////////////////////////////////////////////|#
 
     @staticmethod
     def get_key():
+        """
+        Returns the encryption key.
+        
+        :return: The encryption key.
+        """
         return Socket.__encryption_key

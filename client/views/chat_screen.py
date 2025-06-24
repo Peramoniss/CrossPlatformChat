@@ -41,34 +41,45 @@ from PyQt5.QtGui import (
     QFont
 )
 
-
-
 #|///////////////////////////////////////////////////////////////////////////|#
 #| CLASS DEFINITION                                                          |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class ChatScreen(QWidget):
-    new_message_signal = pyqtSignal(object)
+    """
+    A class that defines the behavior and visual components of the chat screen. 
+    """
+
+    #Signals for inter-thread events
+    new_message_signal = pyqtSignal(object)  
     closed = pyqtSignal()
 
     ###########################################################################
 
     def __init__(self, stacked_widget):
+        """
+        Initializes the screen class.
+
+        :param stacked_widget: The widget (screen class) that will act as parent of this one.
+        """
         super().__init__()
         self.stacked_widget = stacked_widget
-        self.unread_messages = []
-        self.running = False
+        self.unread_messages = [] #List that controls the massages that the user haven't read yet
+        self.running = False 
 
-        self.new_message_signal.connect(self.handle_incoming_message)
+        self.new_message_signal.connect(self.handle_incoming_message) #Sets the function to execute in the event of receiving a new message
         self.setup_user_interface()
 
         app = QApplication.instance()
         if app:
-            app.focusChanged.connect(self.on_focus_changed)
+            app.focusChanged.connect(self.on_focus_changed) #Sets the function to execute in the event of changing focus. Important to control the read messages.
 
     ###########################################################################
 
     def setup_user_interface(self):
+        """
+        Creates the basic screen elements for the chat screen.
+        """
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -79,6 +90,9 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def setup_app_bar(self):
+        """
+        Creates the app title bar on the screen.
+        """
         app_bar_container = QFrame()
         app_bar_container.setStyleSheet("background: transparent;")
 
@@ -132,6 +146,9 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def setup_chat_area(self):
+        """
+        Creates the messaging board for the chat messages on the screen.
+        """
         self.chat_area = QVBoxLayout()
         self.chat_area.addStretch(1)
 
@@ -148,6 +165,10 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def setup_input_area(self):
+        """
+        Creates the input text field on the screen.
+        """
+        #TODO: Implement bold, italic, and other text configurations
         input_layout = QHBoxLayout()
 
         self.input_field = SingleLineTextEdit()
@@ -207,6 +228,9 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def get_common_style(self):
+        """
+        :return: A css text with the basic screen style. 
+        """
         return """
             QTextEdit, QPushButton {
                 border: 1px solid #ccc;
@@ -238,15 +262,21 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def start_connection(self, username):
+        """
+        Starts the connection with the second user. 
+        Opens a new thread to deal with the communication with the server.
+        Called when the screen is loaded.
+        :param username: The name of the current user displayed in this chat session.
+        """
         self.username = username
         self.receiver = MessageReceiverService(
             singletonSocket.get_instance(),
-            callbacks={ #um dicionário de funções para utilizar interagir entre as classes quando necessário
+            callbacks={                                                 #A dictionary of methods to interact between threads
                 'on_leave_request': self.handle_leave_request,
                 'on_leave_confirmation': self.handle_leave_confirmation,
-                'on_sent': lambda msg: self.update_message_status(msg['message_id'], 'Enviado'),
-                'on_received': lambda msg: self.update_message_status(msg['message_id'], 'Recebido'),
-                'on_read': lambda msg: self.update_message_status(msg['message_id'], 'Lido'),
+                'on_sent': lambda msg: self.update_message_status(msg['message_id'], 'Sent'),
+                'on_received': lambda msg: self.update_message_status(msg['message_id'], 'Received'),
+                'on_read': lambda msg: self.update_message_status(msg['message_id'], 'Read'),
                 'on_new': self.process_incoming_message
             }
         )
@@ -255,32 +285,52 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def close_connection(self, socket):
+        """
+        Closes the socket connection between the user and the server.
+        """
         singletonSocket.reset_singleton()
         self.running = False
         socket.close()
-        self.closed.emit()
+        self.closed.emit() #Calls handlechatclosed. Connection made in client.py after the class was instanced
 
     ###########################################################################
 
-    def handle_leave_request(self, message):
+    def handle_leave_request(self):
+        """
+        Closes the connection and returns to the home screen. 
+        """
         self.close_connection(singletonSocket.get_instance())
         self.stacked_widget.setCurrentIndex(0)
 
     ###########################################################################
 
-    def handle_leave_confirmation(self, message):
+    def handle_leave_confirmation(self):
+        """
+        Closes the connection and returns to the home screen.
+        Called when the other user has ended the connection. 
+        """
+        #TODO: Implement a message telling that the other user closed the chat
+        print("GRRRRRRRRRR")
         self.close_connection(singletonSocket.get_instance())
         self.stacked_widget.setCurrentIndex(0)
 
     ###########################################################################
 
     def process_incoming_message(self, message):
+        """
+        Process an incoming message, sending a norification to the server telling that the message was received and dealing with the reading confirmation. 
+        
+        :param message: The message received. 
+        """
+        #Receiving confirmation
         message['message_type'] = MessageType.RECEIVE_RESPONSE.value
         socket = singletonSocket.get_instance()
         aes_key = singletonSocket.get_key()
-        sending_data = (json.dumps(message) + '\n').encode('utf-8')
+        sending_data = (json.dumps(message) + '\n').encode('utf-8') #use \n to separate different messages in the socket buffer
         encryption.send_aes_message(socket, sending_data, aes_key)
         
+        #TODO: add the option to disable reading confirmation
+        #Reading confirmation
         if self.isActiveWindow():
             message['message_type'] = MessageType.READ_RESPONSE.value
             sending_data = (json.dumps(message) + '\n').encode('utf-8')
@@ -288,21 +338,30 @@ class ChatScreen(QWidget):
         else:
             self.unread_messages.append(message)
 
-        self.new_message_signal.emit(message)
+        self.new_message_signal.emit(message) #Puts the new message in the screen on handle_incoming_message
 
     ###########################################################################
 
     def handle_incoming_message(self, message):
+        """
+        Add an incoming message to the screen.
+
+        :param message: The message received. 
+        """
         widget = ChatMessageModel(message.get('user', 'Outro Usuário'), message['message'], message['timestamp'], False)
         self.add_message_to_layout(widget)
 
     ###########################################################################
 
     def handle_back_navigation(self):
+        """
+        Handles returning to the main window after pressing the back button in the chat screen. 
+        """
         try:
             if singletonSocket.is_initialized():
-                self.send_message(text_override='\\q')
+                self.send_message(text='\\q')
                 socket = singletonSocket.get_instance()
+                socket.recv(1024)
                 self.close_connection(socket)
         except Exception:
             pass
@@ -312,20 +371,31 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def update_message_status(self, message_id, status_text):
-        for i in range(self.chat_area.count()):
+        """
+        Updates the status of a message when it was sent, received or read.
+
+        :param message_id: The unique identifier of the message.
+        :param status_text: The string with the new status.
+        """
+        for i in range(self.chat_area.count()): #For every widget in the chat area
             widget = self.chat_area.itemAt(i).widget()
-            if widget and widget.property("message_id") == message_id and widget.client_message:
+            if widget and widget.property("message_id") == message_id and widget.client_message: 
                 current_text = widget.status_label.text()
                 if " - " in current_text:
-                    _, time_part = current_text.split(" - ", 1)
+                    _, time_part = current_text.split(" - ", 1) #Keeps the timestamp, updating only the text
                     widget.status_label.setText(f"{status_text} - {time_part}")
                 break
 
     ###########################################################################
 
-    def send_message(self, text_override=None):
-        text_html = text_override.strip() if text_override else self.input_field.toHtml().strip()
-        text_plain = text_override.strip() if text_override else self.input_field.toPlainText().strip()
+    def send_message(self, text=None):
+        """
+        Updates the status of a message when it was sent, received or read. 
+
+        :param text: The text of the message. Deafult is None.
+        """
+        text_html = text.strip() if text else self.input_field.toHtml().strip()
+        text_plain = text.strip() if text else self.input_field.toPlainText().strip()
 
         if not text_plain:
             return
@@ -335,14 +405,17 @@ class ChatScreen(QWidget):
         message_widget = ChatMessageModel(self.username, text_html, timestamp, True)
         message_widget.setProperty("message_id", message_id)
 
-        msg_type = MessageType.LEAVE_REQUEST.value if text_plain == '\\q' else MessageType.COMMON.value
+        if text_plain == '\\q':
+            msg_type = MessageType.LEAVE_REQUEST.value  
+        else: 
+            msg_type = MessageType.COMMON.value
 
         message_data = {
             "message_id": message_id,
             "user": self.username,
             "timestamp": timestamp,
             "message_type": msg_type,
-            "message": text_plain
+            "message": text_html #So that the other user receive the formatted version
         }
         
         self.add_message_to_layout(message_widget)
@@ -351,7 +424,7 @@ class ChatScreen(QWidget):
         sending_data = (json.dumps(message_data) + '\n').encode('utf-8')
         encryption.send_aes_message(socket, sending_data, aes_key)
 
-        if text_override is None:
+        if text is None:
             self.input_field.clear()
             cursor = self.input_field.textCursor()
             cursor.setCharFormat(QTextCharFormat())
@@ -360,16 +433,24 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def add_message_to_layout(self, message_widget):
+        """
+        Adds a message sent by the user to the chat screen.
+
+        :param message_widget: The PyQt widget holding the new message widget.
+        """
         scrollbar = self.scroll.verticalScrollBar()
-        should_scroll = scrollbar.value() == scrollbar.maximum() or not scrollbar.isVisible()
+        should_scroll =  ( scrollbar.value() == scrollbar.maximum() or not scrollbar.isVisible() ) 
         self.chat_area.insertWidget(self.chat_area.count() - 1, message_widget)
 
-        if should_scroll:
+        if should_scroll: #Autoscroll to the bottom of the chat
             QTimer.singleShot(0, lambda: QTimer.singleShot(0, self.scroll_to_bottom))
 
     ###########################################################################
 
     def on_focus_changed(self):
+        """
+        Sends the reading confirmation when the screen becomes active.
+        """
         if self.isActiveWindow():
             for msg in self.unread_messages[:]:
                 msg['message_type'] = MessageType.READ_RESPONSE.value
@@ -382,6 +463,9 @@ class ChatScreen(QWidget):
     ###########################################################################
 
     def scroll_to_bottom(self):
+        """
+        Autoscroll to the bottom of the chat
+        """
         self.scroll.verticalScrollBar().setValue(self.scroll.verticalScrollBar().maximum())
 
 
@@ -391,11 +475,17 @@ class ChatScreen(QWidget):
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class SingleLineTextEdit(QTextEdit):
+    """
+    Class for the input field bottom bar of the chat screen.
+    """
     returnPressed = pyqtSignal()
 
     ###########################################################################
 
     def __init__(self, *args, **kwargs):
+        """
+        Creates the input field bottom bar of the chat screen.
+        """
         super().__init__(*args, **kwargs)
 
         self.setFixedHeight(40)
@@ -403,17 +493,22 @@ class SingleLineTextEdit(QTextEdit):
         self.setLineWrapMode(QTextEdit.NoWrap)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setPlaceholderText("Enter your message...")
+        self.setPlaceholderText("Enter your message... Right-click in a selected text for formatting.")
         self.setFont(FontManager.PoppinsMedium)
 
     ###########################################################################
 
     def wheelEvent(self, event):
+        #Ignore the wheel event
         event.ignore()
 
     ###########################################################################
 
     def keyPressEvent(self, event):
+        """
+        Handles the keyboard interaction. If enter is pressed, send the message; 
+        otherwise, uses the default treatment of QTextEdit and reads the key pressed.
+        """
         if event.key() in (Qt.Key_Return, Qt.Key_Enter):
             self.returnPressed.emit()
         else:
@@ -422,6 +517,9 @@ class SingleLineTextEdit(QTextEdit):
     ###########################################################################
 
     def contextMenuEvent(self, event):
+        """
+        Configures the context menu, opened whenever the right mouse button is clicked over a selected text.
+        """
         cursor = self.textCursor()
         if cursor.hasSelection():
             menu = self.createStandardContextMenu()
@@ -469,6 +567,5 @@ class SingleLineTextEdit(QTextEdit):
 
             cursor.mergeCharFormat(fmt)
         else:
-            # If the right button is pressed without any 
-            # text selected, the action will be ignored.
+            # If the right button is pressed without any function selected, the action will be ignored.
             event.ignore()

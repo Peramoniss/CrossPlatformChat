@@ -48,9 +48,9 @@ class MessageReceiverService:
     def handle_message(self, message):
         msg_type = message['message_type']
         if msg_type == MessageType.LEAVE_REQUEST.value:
-            self.callbacks['on_leave_request'](message)
+            self.callbacks['on_leave_request']()
         elif msg_type == MessageType.LEAVE_CONFIRMATION.value:
-            self.callbacks['on_leave_confirmation'](message)
+            self.callbacks['on_leave_confirmation']()
         elif msg_type == MessageType.SERVER_RESPONSE.value:
             self.callbacks['on_sent'](message)
         elif msg_type == MessageType.RECEIVE_RESPONSE.value:
