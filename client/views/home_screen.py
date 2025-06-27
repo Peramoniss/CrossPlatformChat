@@ -47,23 +47,33 @@ from PyQt5.QtCore import (
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class ConnectionThread(QThread):
+    """
+    Class for a different thread to handle the connection to the server while the graphics run in another thread.
+    """
     connected = pyqtSignal(object)
     error = pyqtSignal(Exception)
 
     def __init__(self, room_code):
+        """
+        Creates the thread to connect to a room.
+
+        :param room_code: The alphanumeric code to the server.
+        """
         super().__init__()
         self._is_running = True
         self.room_code = room_code
 
     def run(self):
+        """
+        Runs the server connection thread, formalizing the safe channel.
+        """
         try:
             if not self._is_running:
                 return
             
             self.network_socket = start_client(self.room_code)
-            print("Entrou")
 
-            private_key, public_pem, private_pem = encryption.create_rsa_keys()
+            private_key, public_pem = encryption.create_rsa_keys()
             singleton_socket.initialize(self.network_socket)
             socket = singleton_socket.get_instance()
 
@@ -79,6 +89,9 @@ class ConnectionThread(QThread):
 
 
     def stop(self):
+        """
+        Whenever an error occur, stop running the thread.
+        """
         self._is_running = False
         if self.network_socket:
             try:
@@ -86,23 +99,29 @@ class ConnectionThread(QThread):
             except:
                 pass
 
-
-
-
 #|///////////////////////////////////////////////////////////////////////////|#
 #| CLASS DEFINITION                                                          |#
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class GradientLabel(QLabel):
+    """
+    Class for the chat title label stylized with gradient colors. 
+    """
+
     def __init__(self, text="", parent=None):
+        """
+        Initialize the chat title label stylized with gradient colors.
+
+        :param text: The label's text.
+        :param parent: Parent widget. Default is None.
+        """
         super().__init__(text, parent)
         self.gradient_colors = [(0, QColor(18, 62, 205)), (1, QColor(40, 115, 246))]
 
-    def setGradientColors(self, colors):
-        self.gradient_colors = colors
-        self.update()
-
     def paintEvent(self, event):
+        """
+        Paints the label.
+        """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.TextAntialiasing)
@@ -132,20 +151,30 @@ class GradientLabel(QLabel):
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class HomeScreen(QWidget):
+    """
+    Class for the home screen.
+    """
     def __init__(self, stacked_widget, main_window):
+        """
+        Creates the home screen for the chat application.
+
+        :param stacked_widget: Parent widget.
+        :param mains_window: Main window widget. Used to keep track of close and other methods.
+        """
+
         super().__init__()
         self.stacked_widget = stacked_widget
         self.main_window = main_window
         self.thread = None
 
-        # Layout principal vertical com padding nas bordas
+        # Main vertical layour with padding in the corners
         self.main_layout = QVBoxLayout()
         self.main_layout.setContentsMargins(15, 15, 15, 15)
         self.main_layout.setSpacing(15)
         self.setLayout(self.main_layout)
         self.setFont(FontManager.PoppinsSemiBold)
 
-        # Topo com o texto "Bla Bla Bla" e "Chat"
+        # "Bla Bla Bla" and "Chat" labels
         self.top_widget = QWidget()
         self.top_layout = QVBoxLayout()
         self.top_layout.setContentsMargins(0, 0, 0, 0)
@@ -154,11 +183,11 @@ class HomeScreen(QWidget):
 
         self.top_layout.addStretch()
 
-        # Novo container para os dois labels empilhados verticalmente
+        # New container for both labels satcked vertically
         text_column = QWidget()
         text_column_layout = QVBoxLayout()
         text_column_layout.setContentsMargins(0, 0, 0, 0)
-        text_column_layout.setSpacing(0)  # espaçamento pequeno e positivo
+        text_column_layout.setSpacing(0)  # small, positive padding
         text_column.setLayout(text_column_layout)
 
         line1 = GradientLabel("Bla Bla Bla Chat")
@@ -178,7 +207,7 @@ class HomeScreen(QWidget):
 
         self.top_layout.addStretch()
 
-        # Container branco que vai ocupar os 2/3 inferiores
+        # White container for the bottom 2/3
         self.right_widget = QWidget()
         self.right_widget.setStyleSheet("""
             background-color: white;
@@ -196,7 +225,7 @@ class HomeScreen(QWidget):
         self.right_layout.setSpacing(15)
         self.right_widget.setLayout(self.right_layout)
 
-        # Campo para código da sala
+        # Room code field
         self.room_code_input = QLineEdit()
         self.room_code_input.setPlaceholderText("Enter room code")
         self.room_code_input.setFixedHeight(40)
@@ -211,7 +240,7 @@ class HomeScreen(QWidget):
         """)
         self.right_layout.addWidget(self.room_code_input)
 
-        # Campo de nome de usuário
+        # Username field
         self.username_input = QLineEdit()
         self.username_input.setPlaceholderText("Enter your username")
         self.username_input.setFixedHeight(40)
@@ -226,7 +255,7 @@ class HomeScreen(QWidget):
         """)
         self.right_layout.addWidget(self.username_input)
 
-        # Botão de entrada
+        # Enter button
         self.button = QPushButton("Enter")
         self.button.setFixedHeight(40)
         self.button.clicked.connect(self.go_to_chat)
@@ -247,7 +276,7 @@ class HomeScreen(QWidget):
         """)
         self.right_layout.addWidget(self.button)
 
-        # Botão de cancelar (inicialmente oculto)
+        # Cancel button (DEPRECATED)
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setFixedHeight(40)
         self.cancel_button.setStyleSheet("""
@@ -266,7 +295,7 @@ class HomeScreen(QWidget):
         self.cancel_button.clicked.connect(self.cancel_connection)
         self.right_layout.addWidget(self.cancel_button)
 
-        # Barra de progresso na parte inferior
+        # Progress bar for when connecting
         self.progress_bar = QProgressBar()
         self.progress_bar.setFixedHeight(6)
         self.progress_bar.setRange(0, 0)
@@ -311,6 +340,10 @@ class HomeScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def go_to_chat(self):
+        """
+        Changes the screen for the chat screen whenever the connection is established.
+        """
+
         room_code = self.room_code_input.text()
         if not room_code:
             self.notification_manager.show_notification("Room code is required.")
@@ -330,13 +363,15 @@ class HomeScreen(QWidget):
 
         self.thread = ConnectionThread(room_code)
         self.thread.connected.connect(self.on_connected)
-        print("Ueue")
         self.thread.error.connect(self.on_connection_error)
         self.thread.start()
     
     #|///////////////////////////////////////////////////////////////////////|#
 
     def cancel_connection(self):
+        """
+        Tries to cancel the connection. Deprecated since it shuts the server down.
+        """
         if self.thread and self.thread.isRunning():
             self.thread.stop()
             self.thread.wait()
@@ -349,7 +384,10 @@ class HomeScreen(QWidget):
     
     #|///////////////////////////////////////////////////////////////////////|#
 
-    def on_connected(self, network_socket):
+    def on_connected(self):
+        """
+        Handles the view when the connection is established.
+        """
         self.progress_bar.hide()
         self.cancel_button.hide()
         self.button.setEnabled(True)
@@ -363,6 +401,11 @@ class HomeScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def on_connection_error(self, exception):
+        """
+        Handles an error encountered when trying to connect.
+
+        :param exception: The exception or error to be showed.
+        """
         self.progress_bar.hide()
         self.cancel_button.hide()
         self.button.setEnabled(True)
@@ -372,6 +415,11 @@ class HomeScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
     
     def create_tiled_svg_brush(self, svg_path):
+        """
+        Creates the brush to paint the label.
+
+        :param svg_path: The path to the svg icon file. 
+        """
         renderer = QSvgRenderer(svg_path)
         image = QImage(60, 60, QImage.Format_ARGB32)
         image.fill(Qt.transparent)
@@ -386,6 +434,11 @@ class HomeScreen(QWidget):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def paintEvent(self, event):
+        """
+        Handles the paint event.
+
+        :param event: The paint event.
+        """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 

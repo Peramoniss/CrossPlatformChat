@@ -14,7 +14,18 @@ import shared.global_services.encryption_service as encryption
 
 DELIMITER = '\n'
 class MessageReceiverService:
+    """
+    A service destined to receive messages in the background while the main thread occupies itself handling the front-end. 
+    """
+
     def __init__(self, socket, callbacks):
+        """
+        Starts the message receiving process.
+
+        :param socket: Socket with the connection with the server.
+        :param callbacks: A dictionary with functions to be performed in specific moments related to the connection flux. 
+        """
+
         self.socket = socket
         self.callbacks = callbacks
         self.running = True
@@ -23,12 +34,15 @@ class MessageReceiverService:
     ###########################################################################
 
     def receive_loop(self):
+        """
+        The main loop for receiving new messages.
+        """
+
         key = singleton_socket.get_key()
+
         try:
             while self.running:
-                print("WAITING FOR THE RAPTURE")
                 data = encryption.recv_aes_message(self.socket, key)
-                print("WAITED FOR THE RAPTURE")
                 self.buffer += data
                 while DELIMITER in self.buffer:
                     msg_str, self.buffer = self.buffer.split(DELIMITER, 1)
@@ -46,6 +60,9 @@ class MessageReceiverService:
     ###########################################################################
 
     def handle_message(self, message):
+        """
+        Handles the different types of message, calling the function in the dictionary that relates to the message type. 
+        """
         msg_type = message['message_type']
         if msg_type == MessageType.LEAVE_REQUEST.value:
             self.callbacks['on_leave_request']()

@@ -1,13 +1,52 @@
 # Bla Bla Bla Protocol
-A
 
+The connection should work as follows:
 ```mermaid
 sequenceDiagram
-    Client_1->>Server: Sends the message to the Server
-    Server->>Client_1: Confirms the message was sent to the server
+    Client_1->>Server: Starts connection with the Server
+    Server->>Client_1: Accepts the connection
+    Client_2->>Server: Starts connection with the Server
+    Server->>Client_2: Accepts the connection
+```
+
+After the socket connection is established, the encryption keys should be set up. The procces goes as follows:
+```mermaid
+sequenceDiagram
+    Client_1->>Server: Sends rsa public key to the Server created by Client_1
+    Server->>Client_1: Sends rsa-encrypted aes key for communication with Client_1 during in the rest of the connection
+    Client_2->>Server: Sends rsa public key to the Server created by Client_2
+    Server->>Client_2: Sends rsa-encrypted aes key for communication with Client_2 during the rest of the connection
+    Client_1->>Server: Sends aes encrypted message
+    Server->>Client_1: Sends aes encrypted message
+    Client_2->>Server: Sends aes encrypted message
+    Server->>Client_2: Sends aes encrypted message
+```
+
+The rest of the connection should go on as follows:
+```mermaid
+sequenceDiagram    
+    Client_1->>Server: Sends a message to the Server
+    Server->>Client_1: Confirms the message was sent
     Server->>Client_2: Sends the message to Client_2
-    Client_2->>Server: Confirms receipt to the server
+    Client_2->>Server: Confirms the message was received
     Server->>Client_1: Confirms the message was received by Client_2
+    Client_2->>Server: [WHEN WINDOW IS OPEN] Confirms the message was read
+    Server->>Client_1: Confirms the message was read by Client_2
+
+    Client_2->>Server: Sends a message to the Server
+    Server->>Client_2: Confirms the message was sent
+    Server->>Client_1: Sends the message to Client_2
+    Client_1->>Server: Confirms the message was received
+    Server->>Client_2: Confirms the message was received by Client_2
+    Client_1->>Server: [WHEN WINDOW IS OPEN] Confirms the message was read
+    Server->>Client_2: Confirms the message was read by Client_2
+
+    Client_1->>Server: Sends leaving request 
+    Server->>Client_2: Sends leaving confirmation
+    Server->>Client_1: Sends leaving confirmation  
+    Client_1->>Server: Closes connection 
+    Client_2->>Server: Closes connection 
+
 ```
 
 # Bla Bla Bla Chat
@@ -48,28 +87,14 @@ With the virtual environment activated, install all required dependencies using:
 pip install -r requirements.txt
 ```
 
+In case any error arises, try updating pip. If the error persists, try removing the versions from requirements.txt, leaving only the name of the dependencies, but be aware that version compatibility issues might arise. 
+
 ### Starting the application
-In order to start the application locally for testing purposes, execute start_on_windows.bat (for Windows users) or start_on_linux.sh (for Linux users). Those scripts will open three terminal windows: one for the server to control the chat and two clients to interact with it.   
+In order to start the application locally for testing purposes, execute start_on_windows.bat (for Windows users) or start_on_linux.sh (for Linux users). Those scripts will open three terminal windows: one for the server to control the chat and two clients to interact with it.
 
 ## User Instructions
-To use this application as an end user, no development setup is required, though Python programming language should be installed. Simply run the provided executables or follow the usage instructions in the appropriate section. This portion of the documentation will be expanded with step-by-step guide.
+To use this application as an end user, no development setup is required, though Python programming language should be installed. Simply run the provided executables or follow the usage instructions in the appropriate section. This segment of the documentation will be expanded with step-by-step guide.
+
+For the application to work, you must [NO FIM VAMOS TER QUE MANDAR O USUÁRIO INSTALAR TUDO OU ENTÃO GERAMOS EXECUTÁVEIS]
 
 ### Starting the application
-For the application to work, you must have [NO FIM VAMOS TER QUE MANDAR O USUÁRIO INSTALAR TUDO OU ENTÃO GERAMOS EXECUTÁVEIS]
-
-
-
-su
-type your passwod
-apt-install python3.10-venv 
-
-
-pip list should show something like 
-```
-logger     1.4
-pip        22.3
-PyQt5      5.15.11
-PyQt5-Qt5  5.15.2
-PyQt5_sip  12.17.0
-setuptools 65.5.0
-```

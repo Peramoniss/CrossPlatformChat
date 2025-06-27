@@ -18,7 +18,15 @@ from shared.global_utils.font_manager import FontManager
 #|///////////////////////////////////////////////////////////////////////////|#
 
 class MainWindow(QMainWindow):
+    """
+    Main window class.
+    """
+
     def __init__(self):
+        """
+        Starts the main window for the application.
+        """
+
         super().__init__()
         self.setWindowTitle("Bla Bla Bla Chat")
         self.resize(900, 500)
@@ -33,7 +41,10 @@ class MainWindow(QMainWindow):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def closeEvent(self, event):
-        print("Fechando")
+        """
+        Closes the connection with the server whenever the window is closed.
+        """
+
         if Socket.is_initialized():
             try:
                 self.chat_screen.send_message(text='\\q')
@@ -48,6 +59,10 @@ class MainWindow(QMainWindow):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def create_chat_screen(self):
+        """
+        Creates the chat screen
+        """
+
         if self.chat_screen:
             self.stacked_widget.removeWidget(self.chat_screen)
             self.chat_screen.deleteLater()
@@ -59,7 +74,10 @@ class MainWindow(QMainWindow):
     #|///////////////////////////////////////////////////////////////////////|#
 
     def handle_chat_closed(self):
-        self.create_chat_screen()
+        """
+        Closes the connection to the chat.
+        """
+        # self.create_chat_screen()
         self.stacked_widget.setCurrentIndex(0)
 
 
@@ -68,6 +86,9 @@ class MainWindow(QMainWindow):
 #|///////////////////////////////////////////////////////////////////////////|#
 
 if __name__ == "__main__":
+    """
+    Starts the application for the client.
+    """
     app = QApplication(sys.argv)
 
     base_dir = os.path.dirname(os.path.abspath(__file__))

@@ -3,9 +3,21 @@ from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QGraphics
 
 
 class NotificationWidget(QWidget):
+    """
+    Widget for showing the notification.
+    """
+
     closed = pyqtSignal()
 
     def __init__(self, message, duration, parent=None):
+        """
+        Creates the error notification widget.
+
+        :param message: Error message the widget will show.
+        :param duration: The duration, in milisseconds, the message will appear in the screen.
+        :param parent: Parent widget. Default is none.
+        """
+
         super().__init__(parent)
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SubWindow)
@@ -79,6 +91,9 @@ class NotificationWidget(QWidget):
         pass  # No-op
 
     def _start_fade_out(self):
+        """
+        Makes a fade-out effect before closing the notification.
+        """
         self.fade = QPropertyAnimation(self.opacity_effect, b"opacity")
         self.fade.setDuration(300)
         self.fade.setStartValue(1)
@@ -88,5 +103,8 @@ class NotificationWidget(QWidget):
         self.fade.start()
 
     def _close(self):
+        """
+        Closes the notification.
+        """
         self.close()
         self.closed.emit()

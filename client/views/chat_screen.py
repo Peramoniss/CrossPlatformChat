@@ -288,9 +288,9 @@ class ChatScreen(QWidget):
         """
         Closes the socket connection between the user and the server.
         """
-        singletonSocket.reset_singleton()
         self.running = False
         socket.close()
+        singletonSocket.reset_singleton()
         self.closed.emit() #Calls handlechatclosed. Connection made in client.py after the class was instanced
 
     ###########################################################################
@@ -310,7 +310,6 @@ class ChatScreen(QWidget):
         Called when the other user has ended the connection. 
         """
         #TODO: Implement a message telling that the other user closed the chat
-        print("GRRRRRRRRRR")
         self.close_connection(singletonSocket.get_instance())
         self.stacked_widget.setCurrentIndex(0)
 
