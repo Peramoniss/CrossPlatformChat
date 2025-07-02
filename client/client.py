@@ -81,6 +81,22 @@ class MainWindow(QMainWindow):
         self.stacked_widget.setCurrentIndex(0)
 
 
+
+
+
+def resource_path(relative_path):
+    """
+    Get the absolute path to a resource, works for dev and for PyInstaller bundles.
+    """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Not bundled, use current script directory
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 #|///////////////////////////////////////////////////////////////////////////|#
 #| MAIN FUNCTION                                                             |#
 #|///////////////////////////////////////////////////////////////////////////|#
@@ -93,7 +109,8 @@ if __name__ == "__main__":
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.abspath(os.path.join(base_dir, ".."))
-    icon_path = os.path.join(root_dir, "shared", "global_assets", "icons", "app_icon.png")
+    # icon_path = os.path.join(root_dir, "shared", "global_assets", "icons", "app_icon.png")
+    icon_path = resource_path("shared/global_assets/icons/app_icon.png")
     app.setWindowIcon(QIcon(icon_path))
 
     FontManager.load_fonts()    

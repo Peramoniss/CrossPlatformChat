@@ -3,12 +3,13 @@
 #|///////////////////////////////////////////////////////////////////////////|#
 
 import json
+import os
 import socket
 import threading
 import sys
 import logging
 from shared.global_definitions import MessageType
-from shared.global_definitions import SERVER_LOGGING_MODE, LOG_FILE_PATH
+from shared.global_definitions import SERVER_LOGGING_MODE
 import shared.global_services.connection_manager as connection_manager
 import shared.global_services.encryption_service as encryption
 import shared.global_services.hash_service as hasher
@@ -154,6 +155,14 @@ def start_server():
     print("Server is shutting down.")
     server_socket.close()
 
+
+def get_base_path():
+    """
+    Gets the base path of the executable or script, depending if it's running from the script or the executable.
+    """
+    if getattr(sys, 'frozen', False):  # Running as a PyInstaller exe
+        return sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
 #|///////////////////////////////////////////////////////////////////////////|#
 #| MAIN FUNCTION                                                             |#
 #|///////////////////////////////////////////////////////////////////////////|#
@@ -161,6 +170,8 @@ def start_server():
 if __name__ == "__main__":
     #Prepares the server to log
     if SERVER_LOGGING_MODE:
+        LOG_FILE_PATH = os.path.join(get_base_path(), "logs", "server.log")
+        os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True) #Creates the folder if it doesn't exist
         log_formatter = logging.Formatter(
             fmt="%(asctime)s - %(levelname)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
