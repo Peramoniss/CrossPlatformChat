@@ -47,11 +47,13 @@ from PyQt5.QtGui import (
 
 class ChatScreen(QWidget):
     """
-    A class that defines the behavior and visual components of the chat screen. 
+    A class that defines the behavior and visuleave_request_signal = pyqtSignal()al components of the chat screen. 
     """
 
-    #Signals for inter-thread events
+    #Signals for inter-thread evenleave_confirmation_signalts
     new_message_signal = pyqtSignal(object)  
+    leave_request_signal = pyqtSignal()
+    leave_confirmation_signal = pyqtSignal()
     closed = pyqtSignal()
 
     ###########################################################################
@@ -68,6 +70,8 @@ class ChatScreen(QWidget):
         self.running = False 
 
         self.new_message_signal.connect(self.handle_incoming_message) #Sets the function to execute in the event of receiving a new message
+        self.leave_request_signal.connect(self.handle_leave_request)
+        self.leave_confirmation_signal.connect(self.handle_leave_confirmation)
         self.setup_user_interface()
 
         app = QApplication.instance()
@@ -162,7 +166,7 @@ class ChatScreen(QWidget):
 
         self.main_layout.addWidget(self.scroll)
 
-    ###########################################################################
+    #############################################################leave_request_signal##############
 
     def setup_input_area(self):
         """
@@ -272,8 +276,8 @@ class ChatScreen(QWidget):
         self.receiver = MessageReceiverService(
             singletonSocket.get_instance(),
             callbacks={                                                 #A dictionary of methods to interact between threads
-                'on_leave_request': self.handle_leave_request,
-                'on_leave_confirmation': self.handle_leave_confirmation,
+                'on_leave_request': self.leave_request_signal.emit,
+                'on_leave_confirmation': self.leave_confirmation_signal.emit,
                 'on_sent': lambda msg: self.update_message_status(msg['message_id'], 'Sent'),
                 'on_received': lambda msg: self.update_message_status(msg['message_id'], 'Received'),
                 'on_read': lambda msg: self.update_message_status(msg['message_id'], 'Read'),
